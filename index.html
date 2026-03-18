@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" style="color-scheme:light;background:#eef2ff">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +7,23 @@
 <title>2026학년도 학사일정</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; color-scheme: light; }
-body { font-family: 'Noto Sans KR', sans-serif; background: #eef2ff; color: #1e293b; min-height: 100vh;
-  forced-color-adjust: none; }
+* { box-sizing: border-box; margin: 0; padding: 0; color-scheme: light !important; }
+html { background: #eef2ff !important; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #eef2ff !important; color: #1e293b !important; min-height: 100vh; }
 @media (prefers-color-scheme: dark) {
-  :root { color-scheme: light; }
-  body { background: #eef2ff !important; color: #1e293b !important; }
+  html, body { background: #eef2ff !important; color: #1e293b !important; }
+  .month-card  { background: white !important; color: #1e293b !important; }
+  .cal-cell    { background: white !important; }
+  .cal-cell.on-vac { background: #dbeafe !important; }
+  .month-nav   { background: #eef2ff !important; }
+  .sticky-top  { background: #eef2ff !important; }
+  .month-nav-btn { background: white !important; color: #475569 !important; }
+  .dnum        { color: #334155 !important; }
+  .cal-cell.sun .dnum, .cal-cell.hol .dnum { color: #ef4444 !important; }
+  .cal-cell.sat .dnum { color: #3b82f6 !important; }
+  .wday        { color: #94a3b8 !important; }
+  .wday:first-child { color: #ef4444 !important; }
+  .wday:last-child  { color: #3b82f6 !important; }
 }
 .page-wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 48px; }
 .cal-content { padding-top: 24px; }
