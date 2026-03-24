@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>혜원여중 시험좌석 배치표</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── Design tokens ─────────────────────────────────── */
+:root{
+  --c-bg:#f5f5f7;
+  --c-surface:#ffffff;
+  --c-surface2:#f9f9fb;
+  --c-border:#e8e8ed;
+  --c-border2:#d1d1d6;
+  --c-text:#1d1d1f;
+  --c-text2:#6e6e73;
+  --c-text3:#aeaeb2;
+
+  --c-blue:#0071e3;
+  --c-blue-lt:#e8f1fd;
+  --c-blue-md:#b8d4f8;
+
+  --c-amber:#c45000;
+  --c-amber-lt:#fff4e6;
+  --c-amber-md:#ffd59a;
+
+  --c-green:#1a7f37;
+  --c-green-lt:#edfcf2;
+  --c-green-md:#9be9b9;
+
+  --c-red:#cf222e;
+
+  /* seat grade colors */
+  --g1-bg:#edfcf2; --g1-bd:#9be9b9; --g1-tx:#1a7f37;
+  --g2-bg:#e8f1fd; --g2-bd:#b8d4f8; --g2-tx:#0071e3;
+  --g3-bg:#fff4e6; --g3-bd:#ffd59a; --g3-tx:#c45000;
+
+  /* sidebar */
+  --sb-bg:#18181b;
+  --sb-surface:#27272a;
+  --sb-border:#3f3f46;
+  --sb-text:#a1a1aa;
+  --sb-text-hi:#f4f4f5;
+  --sb-accent:#3b82f6;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:var(--c-bg);
+  color:var(--c-text);
+  font-size:13px;
+  display:flex;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ═══════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════ */
+.sidebar{
+  width:268px;min-width:268px;
+  background:var(--sb-bg);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;
+  overflow:hidden;
+}
+
+.sb-header{
+  padding:20px 18px 16px;
+  border-bottom:1px solid var(--sb-border);
+  flex-shrink:0;
+}
+.sb-logo{display:flex;align-items:center;gap:10px;margin-bottom:2px;}
+.sb-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.sb-title{
+  font-size:12.5px;font-weight:700;
+  color:var(--sb-text-hi);line-height:1.3;
+}
+.sb-version{
+  font-size:10px;color:var(--sb-text);
+  background:var(--sb-surface);
+  border:1px solid var(--sb-border);
+  border-radius:4px;padding:1px 6px;
+  display:inline-block;margin-top:6px;
+  font-weight:500;letter-spacing:0.3px;
+}
+
+.sb-section-label{
+  padding:16px 18px 6px;
+  font-size:10px;font-weight:600;
+  color:var(--sb-text);
+  letter-spacing:0.8px;text-transform:uppercase;
+  flex-shrink:0;
+}
+
+.sb-list{flex:1;overflow-y:auto;padding:0 10px 8px;}
+.sb-list::-webkit-scrollbar{width:4px;}
+.sb-list::-webkit-scrollbar-track{background:transparent;}
+.sb-list::-webkit-scrollbar-thumb{background:var(--sb-border);border-radius:4px;}
+
+.sb-item{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;border-radius:9px;
+  cursor:pointer;color:var(--sb-text);
+  font-size:12.5px;font-weight:500;
+  transition:background 0.12s,color 0.12s;
+  margin-bottom:2px;
+}
+.sb-item:hover{background:var(--sb-surface);color:var(--sb-text-hi);}
+.sb-item.active{background:rgba(59,130,246,0.18);color:#93c5fd;}
+.sb-item.active .sb-badge{background:rgba(59,130,246,0.3);}
+
+.sb-badge{
+  font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:20px;
+  flex-shrink:0;
+}
+.sb-badge.g1{background:rgba(26,127,55,0.25);color:#4ade80;}
+.sb-badge.g2{background:rgba(59,130,246,0.2);color:#93c5fd;}
+.sb-badge.g3{background:rgba(234,88,12,0.2);color:#fb923c;}
+
+/* ── Settings ── */
+.sb-settings{border-top:1px solid var(--sb-border);flex-shrink:0;}
+
+.sb-settings-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 18px;cursor:pointer;
+  color:var(--sb-text);font-size:12px;font-weight:600;
+  transition:color 0.12s;gap:8px;
+}
+.sb-settings-toggle:hover{color:var(--sb-text-hi);}
+.sb-settings-toggle svg{flex-shrink:0;transition:transform 0.22s;}
+.sb-settings-toggle.open svg{transform:rotate(180deg);}
+.sb-settings-toggle .st-left{display:flex;align-items:center;gap:8px;}
+
+.sb-settings-body{
+  max-height:0;overflow:hidden;
+  transition:max-height 0.28s ease;
+}
+.sb-settings-body.open{max-height:600px;}
+.sb-settings-inner{padding:4px 14px 14px;}
+
+.s-group{margin-bottom:14px;}
+.s-label{
+  font-size:10px;font-weight:600;
+  color:var(--sb-text);letter-spacing:0.6px;
+  text-transform:uppercase;margin-bottom:7px;display:block;
+}
+.seg-ctrl{
+  display:flex;background:var(--sb-surface);
+  border:1px solid var(--sb-border);
+  border-radius:8px;padding:3px;gap:3px;
+}
+.seg-btn{
+  flex:1;padding:6px 4px;border:none;border-radius:6px;
+  background:transparent;color:var(--sb-text);
+  font-size:11px;font-weight:600;cursor:pointer;
+  font-family:inherit;transition:all 0.15s;
+}
+.seg-btn:hover{color:var(--sb-text-hi);}
+.seg-btn.on{background:#3b82f6;color:#fff;box-shadow:0 1px 4px rgba(59,130,246,0.4);}
+
+.count-table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--sb-border);}
+.count-tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.count-tbl th{
+  background:var(--sb-surface);color:var(--sb-text);
+  padding:5px 3px;text-align:center;
+  font-weight:600;font-size:10px;
+  border-bottom:1px solid var(--sb-border);
+}
+.count-tbl td{padding:3px 2px;}
+.count-tbl input{
+  width:100%;padding:5px 2px;text-align:center;
+  background:transparent;border:none;border-radius:5px;
+  color:var(--sb-text-hi);font-size:11px;font-family:inherit;
+  outline:none;transition:background 0.12s;
+}
+.count-tbl input:focus{background:rgba(59,130,246,0.15);}
+.count-tbl .gc{
+  color:var(--sb-text);font-weight:600;font-size:10px;
+  text-align:right;padding-right:5px;white-space:nowrap;
+}
+.btn-apply{
+  width:100%;margin-top:10px;padding:9px;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  border:none;border-radius:9px;
+  color:#fff;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+  transition:opacity 0.15s;letter-spacing:0.3px;
+}
+.btn-apply:hover{opacity:0.88;}
+
+.sb-footer{
+  padding:12px 14px;border-top:1px solid var(--sb-border);
+  flex-shrink:0;
+}
+.btn-print-all{
+  width:100%;padding:10px;
+  background:var(--sb-surface);color:var(--sb-text);
+  border:1px solid var(--sb-border);border-radius:9px;
+  cursor:pointer;font-family:inherit;font-size:12px;
+  font-weight:600;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn-print-all:hover{background:#3f3f46;color:var(--sb-text-hi);}
+.btn-save-html{
+  width:100%;margin-top:6px;padding:10px;
+  background:transparent;color:var(--sb-text);
+  border:1px solid var(--sb-border);border-radius:9px;
+  cursor:pointer;font-family:inherit;font-size:12px;
+  font-weight:600;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn-save-html:hover{background:var(--sb-surface);color:var(--sb-text-hi);}
+
+/* ═══════════════════════════════════════
+   MAIN
+═══════════════════════════════════════ */
+.main{flex:1;padding:28px 32px;overflow-y:auto;}
+
+.top-bar{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:24px;
+}
+.top-bar h2{
+  font-size:22px;font-weight:800;
+  color:var(--c-text);flex:1;letter-spacing:-0.3px;
+}
+.top-btn{
+  padding:8px 18px;border-radius:10px;border:none;
+  cursor:pointer;font-size:12.5px;font-family:inherit;
+  font-weight:600;transition:all 0.15s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.top-btn-ghost{
+  background:var(--c-surface);color:var(--c-text2);
+  border:1px solid var(--c-border2);
+}
+.top-btn-ghost:hover{background:var(--c-border);color:var(--c-text);}
+.top-btn-primary{
+  background:var(--c-blue);color:#fff;
+  box-shadow:0 1px 3px rgba(0,113,227,0.3);
+}
+.top-btn-primary:hover{background:#0077ed;box-shadow:0 2px 8px rgba(0,113,227,0.4);}
+
+/* ── Info card ── */
+.info-card{
+  background:var(--c-surface);
+  border-radius:16px;
+  border:1px solid var(--c-border);
+  padding:20px 24px;
+  margin-bottom:16px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);
+}
+.info-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;}
+.info-title{font-size:18px;font-weight:800;letter-spacing:-0.3px;}
+.info-sub{font-size:11.5px;color:var(--c-text2);margin-top:3px;line-height:1.6;}
+.stats{display:flex;gap:8px;}
+.stat{
+  background:var(--c-surface2);
+  border:1px solid var(--c-border);
+  border-radius:12px;padding:10px 20px;
+  text-align:center;
+}
+.stat-num{font-size:24px;font-weight:900;line-height:1;color:var(--c-text);display:block;letter-spacing:-0.5px;}
+.stat-label{font-size:10px;color:var(--c-text3);margin-top:3px;display:block;font-weight:600;letter-spacing:0.3px;}
+.legend{
+  display:flex;gap:14px;flex-wrap:wrap;
+  margin-top:14px;padding-top:14px;
+  border-top:1px solid var(--c-border);
+  align-items:center;
+}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--c-text2);font-weight:500;}
+.leg-dot{width:10px;height:10px;border-radius:50%;}
+.leg-dot.g1{background:var(--g1-tx);}
+.leg-dot.g2{background:var(--g2-tx);}
+.leg-dot.g3{background:var(--g3-tx);}
+.leg-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--c-amber-lt);color:var(--c-amber);}
+.leg-absent{width:10px;height:10px;border-radius:3px;background:#e5e5ea;}
+.hint{font-size:11px;color:var(--c-text3);margin-left:auto;}
+
+/* ── Seating card ── */
+.seating-card{
+  background:var(--c-surface);
+  border-radius:16px;
+  border:1px solid var(--c-border);
+  padding:24px 28px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);
+}
+
+.board{
+  background:#636366;
+  border-radius:10px;
+  color:#f5f5f7;
+  text-align:center;
+  padding:8px 20px;
+  font-size:18px;font-weight:900;
+  letter-spacing:8px;
+  margin-bottom:20px;
+}
+
+.col-header-row,.seat-grid{
+  display:grid;
+  grid-template-columns:1fr 22px 1fr 22px 1fr 22px 1fr;
+}
+.col-header-row{margin-bottom:10px;align-items:end;}
+.seat-grid{row-gap:16px;}
+
+.col-hd{
+  text-align:center;padding:6px 4px;border-radius:8px;
+  font-size:10.5px;font-weight:700;line-height:1.5;letter-spacing:0.1px;
+}
+.col-hd.h{background:var(--c-blue-lt);color:var(--c-blue);}
+.col-hd.t{background:var(--c-amber-lt);color:var(--c-amber);}
+.col-hd-gap,.col-hd-aisle,.gap-cell,.aisle-cell{}
+
+/* ── Seat ── */
+.seat{
+  border-radius:12px;
+  padding:10px 6px;
+  text-align:center;
+  cursor:pointer;
+  border:1.5px solid;
+  position:relative;
+  transition:transform 0.12s, box-shadow 0.12s;
+  user-select:none;
+  min-height:88px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.seat:hover:not(.empty){
+  transform:translateY(-3px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.1);
+}
+.seat.g1{background:var(--g1-bg);border-color:var(--g1-bd);}
+.seat.g2{background:var(--g2-bg);border-color:var(--g2-bd);}
+.seat.g3{background:var(--g3-bg);border-color:var(--g3-bd);}
+.seat.absent{background:#f5f5f7!important;border-color:#d1d1d6!important;}
+.seat.empty{
+  background:transparent;border:1.5px dashed var(--c-border);
+  cursor:default;opacity:0.4;
+}
+.seat.empty:hover{transform:none;box-shadow:none;}
+
+.absent-badge{
+  position:absolute;top:4px;right:5px;
+  font-size:9px;font-weight:700;
+  background:#fee2e2;color:#dc2626;
+  padding:1px 5px;border-radius:6px;
+  display:none;
+}
+.seat.absent .absent-badge{display:block;}
+
+.student-id{
+  font-size:39px;font-weight:900;
+  line-height:1.15;display:block;
+  letter-spacing:-1px;
+}
+.seat.absent .student-id{text-decoration:line-through;color:var(--c-text3);}
+.seat.g1:not(.absent) .student-id{color:var(--g1-tx);}
+.seat.g2:not(.absent) .student-id{color:var(--g2-tx);}
+.seat.g3:not(.absent) .student-id{color:var(--g3-tx);}
+
+.type-tag{
+  font-size:9px;font-weight:700;
+  margin-top:3px;padding:2px 7px;
+  border-radius:20px;display:inline-block;
+}
+.seat.g1:not(.absent) .type-tag{color:var(--g1-tx);background:rgba(26,127,55,0.08);border:1.5px solid var(--g1-bd);}
+.seat.g2:not(.absent) .type-tag{color:var(--g2-tx);background:rgba(0,113,227,0.08);border:1.5px solid var(--g2-bd);}
+.seat.g3:not(.absent) .type-tag{color:var(--g3-tx);background:rgba(196,80,0,0.08);border:1.5px solid var(--g3-bd);}
+.seat.absent .type-tag{color:var(--c-text3);background:#e5e5ea;border:1.5px solid #d1d1d6;}
+
+/* ── Notice ── */
+.notice{
+  margin-top:14px;padding:12px 16px;
+  background:#fffbeb;border:1px solid #fde68a;
+  border-radius:10px;font-size:11.5px;color:#92400e;line-height:1.7;
+}
+
+/* ═══════════════════════════════════════
+   PRINT
+═══════════════════════════════════════ */
+@media print{
+  @page{size:A4 portrait;margin:10mm;}
+  body{display:block;background:white;}
+  .sidebar,.top-bar,.hint,.notice,.legend,.col-header-row{display:none!important;}
+  .main{padding:0;max-width:none;width:100%;}
+  .print-page{page-break-after:always;page-break-inside:avoid;}
+  .print-page:last-child{page-break-after:avoid;}
+  .info-card,.seating-card{border:1px solid #ccc!important;box-shadow:none!important;border-radius:6px!important;}
+  .board{background:#808080!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .col-hd.h{background:#dbeafe!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .col-hd.t{background:#fff4e6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .seat.g1{background:#edfcf2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .seat.g2{background:#e8f1fd!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .seat.g3{background:#fff4e6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .seat.absent{background:#f0f0f0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<nav class="sidebar">
+  <div class="sb-header">
+    <div class="sb-logo">
+      <div class="sb-icon">📋</div>
+      <div class="sb-title">혜원여중<br>시험좌석 배치표</div>
+    </div>
+    <span class="sb-version">V 1.0</span>
+  </div>
+
+  <div class="sb-section-label">교실 목록</div>
+  <div class="sb-list" id="sidebarList"></div>
+
+  <!-- 설정 -->
+  <div class="sb-settings">
+    <div class="sb-settings-toggle" id="settingsToggle" onclick="toggleSettings()">
+      <div class="st-left">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        설정
+      </div>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <div class="sb-settings-body" id="settingsBody">
+      <div class="sb-settings-inner">
+
+        <div class="s-group">
+          <span class="s-label">혼합 학년</span>
+          <div class="seg-ctrl">
+            <button class="seg-btn" id="pair12" onclick="setPair('12')">1·2학년</button>
+            <button class="seg-btn on" id="pair23" onclick="setPair('23')">2·3학년</button>
+            <button class="seg-btn" id="pair123" onclick="setPair('123')">전체혼합</button>
+          </div>
+        </div>
+
+        <div class="s-group">
+          <span class="s-label">이동 방식</span>
+          <div class="seg-ctrl">
+            <button class="seg-btn" id="modeF" onclick="setMode('front')">앞번호</button>
+            <button class="seg-btn on" id="modeB" onclick="setMode('back')">뒷번호</button>
+          </div>
+        </div>
+
+        <div class="s-group">
+          <span class="s-label">학반별 학생 수</span>
+          <div class="count-table-wrap">
+            <table class="count-tbl">
+              <thead>
+                <tr><th></th><th>1반</th><th>2반</th><th>3반</th><th>4반</th><th>5반</th></tr>
+              </thead>
+              <tbody id="countBody"></tbody>
+            </table>
+          </div>
+          <button class="btn-apply" onclick="applySettings()">적용</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="sb-footer">
+    <button class="btn-print-all" onclick="printAll()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      전체 배치표 인쇄
+    </button>
+    <button class="btn-save-html" onclick="saveAsHtml()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      HTML로 저장
+    </button>
+  </div>
+</nav>
+
+<!-- ════════════ MAIN ════════════ -->
+<div class="main" id="mainArea">
+  <div class="top-bar">
+    <h2 id="pageTitle">좌석 배치표</h2>
+    <button class="top-btn top-btn-ghost" onclick="resetAbsent()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+      결시 초기화
+    </button>
+    <button class="top-btn top-btn-primary" onclick="window.print()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      현재 교실 인쇄
+    </button>
+  </div>
+  <div id="classroomView"></div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+const DEFAULT_COUNTS = {
+  1:[21,21,21,21,20],
+  2:[25,24,25,24,25],
+  3:[23,23,22,23,23]
+};
+const cfg = {
+  pair:'23', mode:'back',
+  counts:{1:[...DEFAULT_COUNTS[1]],2:[...DEFAULT_COUNTS[2]],3:[...DEFAULT_COUNTS[3]]}
+};
+let CLASSROOMS=[], currentId='';
+const absent={};
+
+function buildClassrooms(){
+  CLASSROOMS=[];
+
+  if(cfg.pair==='123'){
+    // 전체혼합: 3학년→2학년교실, 2학년→1학년교실, 1학년→3학년교실
+    const pairs=[[1,2],[2,3],[3,1]]; // [소속학년, 받는이동학년]
+    pairs.forEach(([gHome,gTrans])=>{
+      for(let i=0;i<5;i++){
+        const cls=i+1;
+        const totH=cfg.counts[gHome][i], totT=cfg.counts[gTrans][i];
+        const homeH=totH-12;
+        let hF,hT,tF,tTend;
+        if(cfg.mode==='back'){
+          hF=1;hT=homeH;tF=cfg.counts[gTrans][i]-11;tTend=totT;
+        }else{
+          hF=13;hT=totH;tF=1;tTend=12;
+        }
+        const id=`${gHome}-${cls}`;
+        CLASSROOMS.push({
+          id,name:`${gHome}학년 ${cls}반 교실`,grade:gHome,cls,
+          home:{grade:gHome,cls,from:hF,to:hT,count:homeH,label:`${gHome}학년 ${cls}반 소속`},
+          transfer:{grade:gTrans,cls,from:tF,to:tTend,count:12,label:`${gTrans}학년 ${cls}반 이동 반`}
+        });
+        if(!absent[id]) absent[id]=new Set();
+      }
+    });
+  } else {
+    const [gA,gB]=cfg.pair==='12'?[1,2]:[2,3];
+    for(let i=0;i<5;i++){
+      const cls=i+1;
+      const totA=cfg.counts[gA][i], totB=cfg.counts[gB][i];
+      const homeA=totA-12, homeB=totB-12;
+      let hFA,hTA,tFA,tTA,hFB,hTB,tFB,tTB;
+      if(cfg.mode==='back'){
+        hFA=1;hTA=homeA;tFA=homeA+1;tTA=totA;
+        hFB=1;hTB=homeB;tFB=homeB+1;tTB=totB;
+      }else{
+        hFA=13;hTA=totA;tFA=1;tTA=12;
+        hFB=13;hTB=totB;tFB=1;tTB=12;
+      }
+      CLASSROOMS.push({
+        id:`${gA}-${cls}`,name:`${gA}학년 ${cls}반 교실`,grade:gA,cls,
+        home:{grade:gA,cls,from:hFA,to:hTA,count:homeA,label:`${gA}학년 ${cls}반 소속`},
+        transfer:{grade:gB,cls,from:tFB,to:tTB,count:12,label:`${gB}학년 ${cls}반 이동 반`}
+      });
+      CLASSROOMS.push({
+        id:`${gB}-${cls}`,name:`${gB}학년 ${cls}반 교실`,grade:gB,cls,
+        home:{grade:gB,cls,from:hFB,to:hTB,count:homeB,label:`${gB}학년 ${cls}반 소속`},
+        transfer:{grade:gA,cls,from:tFA,to:tTA,count:12,label:`${gA}학년 ${cls}반 이동 반`}
+      });
+      if(!absent[`${gA}-${cls}`]) absent[`${gA}-${cls}`]=new Set();
+      if(!absent[`${gB}-${cls}`]) absent[`${gB}-${cls}`]=new Set();
+    }
+  }
+  if(!CLASSROOMS.find(r=>r.id===currentId)) currentId=CLASSROOMS[0].id;
+}
+
+// ── COUNT TABLE ───────────────────────────────────────
+function renderCountTable(){
+  document.getElementById('countBody').innerHTML=[1,2,3].map(g=>`
+    <tr>
+      <td class="gc">${g}학년</td>
+      ${cfg.counts[g].map((v,i)=>`<td><input type="number" min="13" max="50" id="cnt${g}_${i+1}" value="${v}"></td>`).join('')}
+    </tr>`).join('');
+}
+
+// ── SETTINGS ─────────────────────────────────────────
+function toggleSettings(){
+  const body=document.getElementById('settingsBody');
+  const toggle=document.getElementById('settingsToggle');
+  const open=body.classList.toggle('open');
+  toggle.classList.toggle('open',open);
+}
+function setPair(val){
+  cfg.pair=val;
+  document.getElementById('pair12').classList.toggle('on',val==='12');
+  document.getElementById('pair23').classList.toggle('on',val==='23');
+  document.getElementById('pair123').classList.toggle('on',val==='123');
+  renderCountTable();
+}
+function setMode(val){
+  cfg.mode=val;
+  document.getElementById('modeF').classList.toggle('on',val==='front');
+  document.getElementById('modeB').classList.toggle('on',val==='back');
+}
+function applySettings(){
+  [1,2,3].forEach(g=>{
+    cfg.counts[g]=[1,2,3,4,5].map(cls=>{
+      const el=document.getElementById(`cnt${g}_${cls}`);
+      return el?Math.max(13,parseInt(el.value)||13):DEFAULT_COUNTS[g][cls-1];
+    });
+  });
+  saveSettings();
+  Object.keys(absent).forEach(k=>absent[k].clear());
+  currentId='';
+  buildClassrooms();
+  renderSidebar();
+  renderRoom(currentId);
+  // 설정 창 닫기
+  document.getElementById('settingsBody').classList.remove('open');
+  document.getElementById('settingsToggle').classList.remove('open');
+}
+
+// ── localStorage 저장/불러오기 ─────────────────────────
+function saveSettings(){
+  try{
+    localStorage.setItem('hwSeatingCfg', JSON.stringify({
+      pair: cfg.pair,
+      mode: cfg.mode,
+      counts: cfg.counts
+    }));
+  }catch(e){}
+}
+
+function loadSettings(){
+  try{
+    const saved = localStorage.getItem('hwSeatingCfg');
+    if(!saved) return;
+    const s = JSON.parse(saved);
+    if(s.pair) cfg.pair = s.pair;
+    if(s.mode) cfg.mode = s.mode;
+    if(s.counts){
+      [1,2,3].forEach(g=>{ if(s.counts[g]) cfg.counts[g]=[...s.counts[g]]; });
+    }
+    // UI 버튼 동기화
+    ['12','23','123'].forEach(v=>
+      document.getElementById('pair'+v)?.classList.toggle('on', cfg.pair===v));
+    ['front','back'].forEach(v=>{
+      const map={front:'modeF',back:'modeB'};
+      document.getElementById(map[v])?.classList.toggle('on', cfg.mode===v);
+    });
+  }catch(e){}
+}
+
+// ── HTML로 저장 ────────────────────────────────────────
+function saveAsHtml(){
+  // 현재 cfg.counts를 DEFAULT_COUNTS 자리에 반영한 새 HTML 생성
+  const src = document.documentElement.outerHTML;
+  const updated = src.replace(
+    /const DEFAULT_COUNTS = \{[\s\S]*?\};/,
+    `const DEFAULT_COUNTS = {
+  1:[${cfg.counts[1].join(',')}],
+  2:[${cfg.counts[2].join(',')}],
+  3:[${cfg.counts[3].join(',')}]
+};`
+  );
+  const blob = new Blob([updated], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '혜원여중_시험좌석배치표.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── COLUMNS ──────────────────────────────────────────
+function makeCols(room){
+  const H=[],T=[];
+  for(let n=room.home.from;n<=room.home.to;n++) H.push({grade:room.home.grade,cls:room.home.cls,num:n,type:'home'});
+  for(let n=room.transfer.from;n<=room.transfer.to;n++) T.push({grade:room.transfer.grade,cls:room.transfer.cls,num:n,type:'transfer'});
+  const hSplit=Math.floor(H.length/2), tSplit=Math.ceil(T.length/2);
+  return{col1:H.slice(0,hSplit),col2:T.slice(0,tSplit),col3:H.slice(hSplit),col4:T.slice(tSplit)};
+}
+
+// ── SEAT HTML ────────────────────────────────────────
+function seatEl(s,roomId,ab,clickable){
+  const key=`${s.grade}-${s.cls}-${s.num}`;
+  const isAb=ab.has(key);
+  const oc=clickable?`onclick="toggleAbsent('${roomId}','${s.grade}','${s.cls}','${s.num}')"` :'';
+  const hb=`${s.grade}${s.cls}${String(s.num).padStart(2,'0')}`;
+  const tag=s.type==='home'
+    ?`<span class="type-tag" style="visibility:hidden;">이동 반</span>`
+    :`<span class="type-tag">이동 반</span>`;
+  return`<div class="seat g${s.grade}${isAb?' absent':''}" ${oc}>
+    <span class="absent-badge">결시</span>
+    <span class="student-id">${hb}</span>${tag}</div>`;
+}
+const emptyEl=()=>`<div class="seat empty"></div>`;
+
+function buildGrid(cols,roomId,ab,clickable=true){
+  const{col1,col2,col3,col4}=cols;
+  const rows=Math.max(col1.length,col2.length,col3.length,col4.length);
+  let h='';
+  for(let r=0;r<rows;r++){
+    h+=(col1[r]?seatEl(col1[r],roomId,ab,clickable):emptyEl());
+    h+=`<div class="gap-cell"></div>`;
+    h+=(col2[r]?seatEl(col2[r],roomId,ab,clickable):emptyEl());
+    h+=`<div class="aisle-cell"></div>`;
+    h+=(col3[r]?seatEl(col3[r],roomId,ab,clickable):emptyEl());
+    h+=`<div class="gap-cell"></div>`;
+    h+=(col4[r]?seatEl(col4[r],roomId,ab,clickable):emptyEl());
+  }
+  return h;
+}
+
+function colHeaders(room){
+  const hg=room.home.grade,tg=room.transfer.grade,c=room.cls;
+  return`
+    <div class="col-hd h">${hg}학년 ${c}반 소속<br><small style="font-weight:500;font-size:9px;opacity:.7">1분단</small></div>
+    <div class="col-hd-gap"></div>
+    <div class="col-hd t">${tg}학년 ${c}반 이동<br><small style="font-weight:500;font-size:9px;opacity:.7">2분단</small></div>
+    <div class="col-hd-aisle"></div>
+    <div class="col-hd h">${hg}학년 ${c}반 소속<br><small style="font-weight:500;font-size:9px;opacity:.7">3분단</small></div>
+    <div class="col-hd-gap"></div>
+    <div class="col-hd t">${tg}학년 ${c}반 이동<br><small style="font-weight:500;font-size:9px;opacity:.7">4분단</small></div>`;
+}
+
+// ── SIDEBAR ───────────────────────────────────────────
+function renderSidebar(){
+  const sorted=[...CLASSROOMS].sort((a,b)=>a.grade-b.grade||a.cls-b.cls);
+  document.getElementById('sidebarList').innerHTML=sorted.map(r=>`
+    <div class="sb-item${r.id===currentId?' active':''}" onclick="selectRoom('${r.id}')">
+      <span class="sb-badge g${r.grade}">${r.grade}학년</span>${r.cls}반 교실
+    </div>`).join('');
+}
+
+// ── RENDER ROOM ───────────────────────────────────────
+function renderRoom(id){
+  const room=CLASSROOMS.find(r=>r.id===id);
+  if(!room) return;
+  const ab=absent[id]||(absent[id]=new Set());
+  const cols=makeCols(room);
+  const total=room.home.count+12;
+  document.getElementById('pageTitle').textContent=room.name;
+
+  const modeLabel=cfg.mode==='back'?'뒷번호 이동':'앞번호 이동';
+  const gA=room.home.grade, gB=room.transfer.grade;
+  const abList=ab.size>0
+    ?`<div class="notice"><strong>결시자 현황 (${ab.size}명):</strong> ${[...ab].sort().join(', ')}</div>`:'';
+
+  document.getElementById('classroomView').innerHTML=`
+  <div class="info-card">
+    <div class="info-head">
+      <div>
+        <div class="info-title">${room.name}</div>
+        <div class="info-sub">
+          ${room.home.label} (${room.home.from}~${room.home.to}번, ${room.home.count}명) → 1·3분단 &nbsp;·&nbsp;
+          ${room.transfer.label} (${room.transfer.from}~${room.transfer.to}번, 12명) → 2·4분단
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="stat-num">${total}</span><span class="stat-label">재 적</span></div>
+        <div class="stat"><span class="stat-num">${room.home.count}</span><span class="stat-label">소 속</span></div>
+        <div class="stat"><span class="stat-num">12</span><span class="stat-label">이 동</span></div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="leg-dot g${gA}"></div>${gA}학년 소속</div>
+      <div class="legend-item"><div class="leg-dot g${gB}"></div>${gB}학년 소속</div>
+      <div class="legend-item"><span class="leg-tag">이동 반</span> 이동 학생</div>
+      <div class="legend-item"><div class="leg-absent"></div> 결시 (클릭으로 표시)</div>
+      <span class="hint">💡 좌석 클릭 → 결시 &nbsp;|&nbsp; ${modeLabel}</span>
+    </div>
+  </div>
+  <div class="seating-card">
+    <div class="board">전 자 칠 판</div>
+    <div class="col-header-row">${colHeaders(room)}</div>
+    <div class="seat-grid">${buildGrid(cols,id,ab)}</div>
+    ${abList}
+  </div>`;
+}
+
+// ── INTERACTIONS ──────────────────────────────────────
+function selectRoom(id){currentId=id;renderSidebar();renderRoom(id);}
+function toggleAbsent(roomId,grade,cls,num){
+  const key=`${grade}-${cls}-${num}`,ab=absent[roomId]||(absent[roomId]=new Set());
+  ab.has(key)?ab.delete(key):ab.add(key);
+  renderRoom(roomId);
+}
+function resetAbsent(){if(absent[currentId])absent[currentId].clear();renderRoom(currentId);}
+
+// ── PRINT ALL ────────────────────────────────────────
+function printAll(){
+  const main=document.getElementById('mainArea');
+  const origMain=main.innerHTML;
+  const sidebar=document.querySelector('.sidebar');
+  const topbar=document.querySelector('.top-bar');
+  sidebar.style.display='none'; topbar.style.display='none';
+
+  const sorted=[...CLASSROOMS].sort((a,b)=>a.grade-b.grade||a.cls-b.cls);
+  let allHtml='';
+  sorted.forEach((room,i)=>{
+    const ab=absent[room.id]||(absent[room.id]=new Set());
+    const cols=makeCols(room),total=room.home.count+12;
+    const isLast=i===sorted.length-1;
+    allHtml+=`
+    <div class="print-page${isLast?' last':''}">
+      <div class="info-card">
+        <div class="info-head">
+          <div>
+            <div class="info-title">${room.name}</div>
+            <div class="info-sub">
+              ${room.home.label} (${room.home.from}~${room.home.to}번, ${room.home.count}명) → 1·3분단 &nbsp;·&nbsp;
+              ${room.transfer.label} (${room.transfer.from}~${room.transfer.to}번, 12명) → 2·4분단
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><span class="stat-num">${total}</span><span class="stat-label">재 적</span></div>
+            <div class="stat"><span class="stat-num">${room.home.count}</span><span class="stat-label">소 속</span></div>
+            <div class="stat"><span class="stat-num">12</span><span class="stat-label">이 동</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="seating-card">
+        <div class="board">전 자 칠 판</div>
+        <div class="seat-grid">${buildGrid(cols,room.id,ab,false)}</div>
+      </div>
+    </div>`;
+  });
+
+  main.innerHTML=allHtml;
+  setTimeout(()=>{
+    window.print();
+    main.innerHTML=origMain;
+    sidebar.style.display=''; topbar.style.display='';
+    renderSidebar(); renderRoom(currentId);
+  },300);
+}
+
+// ── INIT ─────────────────────────────────────────────
+loadSettings();
+renderCountTable();
+buildClassrooms();
+renderSidebar();
+renderRoom(currentId);
+</script>
+</body>
+</html>
