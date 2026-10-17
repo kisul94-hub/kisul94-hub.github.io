@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0c">
+<title>소리길</title>
+<style>
+/* 점자블록 노랑 + 검정의 고대비 단일 테마. 한 화면 앱, 큰 터치 영역 */
+:root{
+  --bg:#0b0b0c; --panel:#17171a; --line:#2c2c31; --fg:#f4f4ef; --dim:#a3a39a;
+  --tactile:#ffd400; --danger:#ff4d3d; --ok:#3ddc84; --guide:#5ec8ff;
+  --font:"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--font);
+  padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
+main{max-width:560px;margin:0 auto;padding-block:16px 40px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h1{margin:0;font-size:28px;letter-spacing:-.5px}
+h1 span{color:var(--tactile)}
+.sub{color:var(--dim);font-size:14px}
+button{font:inherit;border:0;border-radius:14px;min-height:64px;padding:12px 18px;font-size:20px;font-weight:700;cursor:pointer;color:var(--bg);background:var(--tactile);width:100%}
+button.ghost{background:transparent;color:var(--fg);border:2px solid var(--line);font-size:17px;min-height:56px}
+button.stop{background:var(--danger);color:#fff}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--guide);outline-offset:3px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card ul{margin:8px 0 0;padding-left:20px;display:grid;gap:6px}
+.warn{border-color:#5a4a00;color:#ffe88a;font-size:14px}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+#stage{position:relative;width:100%;background:#000;border-radius:16px;overflow:hidden}
+#view{display:block;width:100%;height:auto}
+#stage .hint{position:absolute;left:8px;bottom:8px;font-size:12px;color:var(--dim);background:rgba(0,0,0,.6);padding:2px 8px;border-radius:8px}
+#learnBadge{position:absolute;inset:0;display:grid;place-items:center;font-size:22px;font-weight:800;color:var(--bg);background:rgba(255,212,0,.82)}
+.read{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cell{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center;min-width:0}
+.cell b{display:block;font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cell small{color:var(--dim);font-size:12px}
+.cell.alert{border-color:var(--danger);background:#3a1310}
+.cell.alert b{color:#ffb3aa}
+.cell.near{background:var(--danger)}
+.cell.near b,.cell.near small{color:#fff}
+.cell.narrow{border-color:var(--tactile)}
+#meta{color:var(--dim);font-size:13px;display:flex;gap:12px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+#meta .bad{color:var(--tactile);font-weight:700}
+details summary{font-size:18px;font-weight:700;cursor:pointer;min-height:44px;display:flex;align-items:center}
+.set{display:grid;gap:14px;margin-top:8px}
+.set label{display:grid;gap:4px;font-size:15px}
+.set .lab{display:flex;justify-content:space-between;gap:8px}
+.set output{color:var(--tactile);font-variant-numeric:tabular-nums}
+.set .help{color:var(--dim);font-size:12px}
+input[type=range]{width:100%;accent-color:var(--tactile);height:32px}
+.chk{display:flex!important;grid-template-columns:none;align-items:center;gap:10px}
+.chk input{width:24px;height:24px;accent-color:var(--tactile)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--dim)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>소리<span>길</span></h1>
+    <span class="sub">실내 보행 보조 · 시험판 v0.1</span>
+  </header>
+
+  <!-- 시작 화면 -->
+  <section id="startScreen" style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <strong>이렇게 동작합니다</strong>
+      <ul>
+        <li>앞이 비어 있으면 <b>무음</b>입니다.</li>
+        <li>정면 장애물은 <b>양쪽 귀</b>, 좌·우 장애물은 <b>그쪽 귀</b>에서 "띵" 소리가 납니다.</li>
+        <li>가까워질수록 <b>빠르고 크게</b> 울리고, 약 0.6m 이내는 연속음과 진동을 냅니다.</li>
+        <li>앞이 막히면 더 비어 있는 쪽 귀에서 <b>낮고 부드러운 안내음</b>이 납니다.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <strong>시작 전 준비</strong>
+      <ul>
+        <li>휴대폰을 <b>세로</b>로 가슴 높이에 고정하고, 카메라가 <b>살짝 아래</b>(약 30°)를 보게 합니다.</li>
+        <li>시작하면 처음 1초 동안 <b>발 앞 바닥</b>을 학습합니다. 바닥만 보이게 해 주세요.</li>
+        <li>유선 이어폰이나 골전도 이어폰을 권장합니다. 블루투스는 소리가 늦을 수 있습니다.</li>
+      </ul>
+    </div>
+    <button id="btnStart">카메라로 시작</button>
+    <button id="btnFile" class="ghost">녹화한 동영상으로 테스트 (PC용)</button>
+    <input id="fileIn" type="file" accept="video/*" hidden>
+    <div class="card warn">시험판입니다. 흰지팡이나 보행 보조자를 대신할 수 없습니다. 테스트는 반드시 보조자가 옆에 있는 상태에서 하세요. 유리문, 거울, 바닥과 색이 같은 벽, 계단 아래쪽은 감지하지 못합니다.</div>
+    <p id="err" class="sub" role="alert"></p>
+  </section>
+
+  <!-- 실행 화면 -->
+  <section id="runScreen" style="display:none;flex-direction:column;gap:12px">
+    <div id="stage">
+      <canvas id="view" width="360" height="480" aria-label="카메라 분석 화면. 누르면 바닥을 다시 학습합니다"></canvas>
+      <div id="learnBadge" hidden>바닥 학습 중…</div>
+      <span class="hint">화면을 누르면 바닥 다시 학습</span>
+    </div>
+    <div class="read" aria-hidden="true">
+      <div class="cell" id="cL"><small>왼쪽</small><b>—</b></div>
+      <div class="cell" id="cC"><small>정면</small><b>—</b></div>
+      <div class="cell" id="cR"><small>오른쪽</small><b>—</b></div>
+      <div class="cell" id="cW"><small>통로 폭</small><b>—</b></div>
+    </div>
+    <div id="meta"></div>
+    <div class="legend">
+      <span><i style="background:rgba(61,220,132,.55)"></i>바닥으로 판단</span>
+      <span><i style="background:var(--danger)"></i>장애물 경계</span>
+      <span><i style="background:var(--guide)"></i>내 몸 폭 통로</span>
+      <span><i style="background:var(--tactile)"></i>바닥 학습 영역</span>
+    </div>
+    <div class="row">
+      <button id="btnLearn">바닥 다시 학습</button>
+      <button id="btnStop" class="stop">정지</button>
+    </div>
+  </section>
+
+  <!-- 설정 -->
+  <details class="card" id="settings">
+    <summary>설정 · 보정</summary>
+    <div class="set">
+      <label><span class="lab">카메라 높이 <output data-o="camH"></output></span>
+        <input id="s_camH" data-k="camH" type="range" min="0.8" max="1.6" step="0.05">
+        <span class="help">바닥에서 휴대폰 카메라까지의 높이(m). 거리 계산의 기준입니다.</span></label>
+      <label class="chk"><input id="s_pitchAuto" data-k="pitchAuto" type="checkbox">기울기 센서 자동 사용</label>
+      <label><span class="lab">수동 기울기 <output data-o="pitchMan"></output></span>
+        <input id="s_pitchMan" data-k="pitchMan" type="range" min="5" max="70" step="1">
+        <span class="help">카메라가 수평보다 아래로 숙인 각도. 센서가 없거나 동영상 테스트일 때 씁니다.</span></label>
+      <label><span class="lab">카메라 세로 화각 <output data-o="vfov"></output></span>
+        <input id="s_vfov" data-k="vfov" type="range" min="40" max="80" step="1">
+        <span class="help">거리가 실제보다 멀게 나오면 줄이고, 가깝게 나오면 늘리세요.</span></label>
+      <label><span class="lab">정면 경고 시작 거리 <output data-o="centerRange"></output></span>
+        <input id="s_centerRange" data-k="centerRange" type="range" min="0.8" max="3.5" step="0.1"></label>
+      <label><span class="lab">좌우 경고 시작 거리 <output data-o="sideRange"></output></span>
+        <input id="s_sideRange" data-k="sideRange" type="range" min="0.4" max="2" step="0.1">
+        <span class="help">복도 벽 때문에 계속 울리면 줄이세요.</span></label>
+      <label><span class="lab">내 몸 반폭 <output data-o="halfW"></output></span>
+        <input id="s_halfW" data-k="halfW" type="range" min="0.2" max="0.6" step="0.05">
+        <span class="help">이 폭 안의 물체를 "정면"으로 봅니다. 어깨 반폭 + 여유.</span></label>
+      <label><span class="lab">바닥 판정 엄격도 <output data-o="sens"></output></span>
+        <input id="s_sens" data-k="sens" type="range" min="1" max="10" step="1">
+        <span class="help">높을수록 바닥과 조금만 달라도 장애물로 봅니다. 그림자에 자주 울리면 낮추세요.</span></label>
+      <label><span class="lab">음량 <output data-o="vol"></output></span>
+        <input id="s_vol" data-k="vol" type="range" min="0.1" max="1" step="0.05"></label>
+      <label class="chk"><input id="s_guide" data-k="guide" type="checkbox">앞이 막히면 빈 쪽 안내음</label>
+      <label class="chk"><input id="s_voice" data-k="voice" type="checkbox">음성 안내 (좁은 통로, 학습 완료 등)</label>
+      <label class="chk"><input id="s_vib" data-k="vib" type="checkbox">아주 가까우면 진동 (안드로이드)</label>
+      <label class="chk"><input id="s_debug" data-k="debug" type="checkbox">분석 화면 표시 (끄면 배터리 절약)</label>
+      <button id="btnReset" class="ghost">설정 초기화</button>
+    </div>
+  </details>
+</main>
+
+<video id="v" playsinline muted autoplay style="display:none"></video>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+
+/* ---------- 설정 ---------- */
+const DEF = {camH:1.2, pitchAuto:true, pitchMan:30, vfov:62, centerRange:2.0, sideRange:0.9,
+             halfW:0.35, sens:3, vol:0.7, guide:true, voice:true, vib:true, debug:true};
+const KEY = 'sorigil.settings.v1';
+let S = {...DEF};
+try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
+const FMT = {camH:v=>v.toFixed(2)+'m', pitchMan:v=>v+'°', vfov:v=>v+'°', centerRange:v=>v.toFixed(1)+'m',
+             sideRange:v=>v.toFixed(1)+'m', halfW:v=>v.toFixed(2)+'m', sens:v=>String(v), vol:v=>Math.round(v*100)+'%'};
+function syncUI(){
+  document.querySelectorAll('[data-k]').forEach(el => {
+    const k = el.dataset.k;
+    if (el.type === 'checkbox') el.checked = !!S[k]; else el.value = S[k];
+  });
+  document.querySelectorAll('[data-o]').forEach(o => { o.textContent = FMT[o.dataset.o](S[o.dataset.o]); });
+}
+document.querySelectorAll('[data-k]').forEach(el => el.addEventListener('input', () => {
+  const k = el.dataset.k;
+  S[k] = el.type === 'checkbox' ? el.checked : parseFloat(el.value);
+  if (k === 'vol' && master) master.gain.value = S.vol;
+  syncUI(); save();
+}));
+$('#btnReset').addEventListener('click', () => { S = {...DEF}; save(); syncUI(); if (master) master.gain.value = S.vol; });
+syncUI();
+
+/* ---------- 상태 ---------- */
+const video = $('#v');
+const view = $('#view'), vctx = view.getContext('2d');
+const work = document.createElement('canvas');
+const wctx = work.getContext('2d', {willReadFrequently:true});
+const ovl = document.createElement('canvas'), octx = ovl.getContext('2d');
+let PW = 96, PH = 128;
+let bins, mask, rowDist, rowSlant, colDist, colY, tmpCol, ovlImg;
+const NB = 2048;                       // 8(밝기) x 16(Cb) x 16(Cr)
+let hist = new Float32Array(NB), rawH = new Float32Array(NB), newH = new Float32Array(NB);
+let histReady = false, learnFrames = 0;
+let running = false, stream = null, wakeLock = null, lastProc = 0, rafId = 0, schedTimer = 0;
+let pitchSensor = null, th = 0.5;
+const MAXD = 4.5;                       // 이 거리까지만 바닥을 훑음(m)
+const hist5 = {C:[], L:[], R:[]};
+const A = {C:false, L:false, R:false};  // 경고 상태(히스테리시스)
+const Z = {C:Infinity, L:Infinity, R:Infinity, width:null, widthOpen:false, guide:null, refRatio:1};
+
+function allocate(){
+  const vw = video.videoWidth || 480, vh = video.videoHeight || 640;
+  PW = vw >= vh ? 128 : 96;
+  PH = Math.max(48, Math.round(PW * vh / vw));
+  work.width = ovl.width = PW; work.height = ovl.height = PH;
+  bins = new Uint16Array(PW*PH); mask = new Uint8Array(PW*PH);
+  rowDist = new Float32Array(PH); rowSlant = new Float32Array(PH);
+  colDist = new Float32Array(PW); colY = new Int16Array(PW); tmpCol = new Float32Array(PW);
+  ovlImg = octx.createImageData(PW, PH);
+  const cw = Math.min(720, Math.round(view.clientWidth * (window.devicePixelRatio||1)) || 360);
+  view.width = cw; view.height = Math.round(cw * vh / vw);
+}
+
+/* ---------- 기울기 ---------- */
+function onOri(e){
+  if (e.beta == null) return;
+  const down = 90 - e.beta;             // 세로 모드: 똑바로 세우면 0°, 숙이면 +
+  pitchSensor = pitchSensor == null ? down : pitchSensor*0.85 + down*0.15;
+}
+const getPitch = () => (S.pitchAuto && pitchSensor != null) ? Math.max(0, Math.min(85, pitchSensor)) : S.pitchMan;
+
+function geometry(){
+  const tv = Math.tan(S.vfov*Math.PI/360);
+  th = tv * PW / PH;
+  const p = getPitch()*Math.PI/180;
+  for (let y=0; y<PH; y++){
+    const a = p + Math.atan(((y+0.5) - PH/2)/(PH/2) * tv);
+    if (a > 0.02){ rowDist[y] = S.camH/Math.tan(a); rowSlant[y] = S.camH/Math.sin(a); }
+    else { rowDist[y] = Infinity; rowSlant[y] = Infinity; }
+  }
+}
+
+/* ---------- 바닥 색 모델 ---------- */
+function blurHist(raw, out){
+  let sum = 0;
+  for (let l=0; l<8; l++) for (let a=0; a<16; a++) for (let b=0; b<16; b++){
+    let s = 0;
+    for (let dl=-1; dl<=1; dl++){ const L=l+dl; if (L<0||L>7) continue; const wl = dl ? 0.5 : 1;
+      for (let da=-1; da<=1; da++){ const Aa=a+da; if (Aa<0||Aa>15) continue;
+        for (let db=-1; db<=1; db++){ const B=b+db; if (B<0||B>15) continue;
+          s += wl*(da?0.5:1)*(db?0.5:1)*raw[(L<<8)|(Aa<<4)|B]; } } }
+    out[(l<<8)|(a<<4)|b] = s; sum += s;
+  }
+  if (sum > 0) for (let i=0; i<NB; i++) out[i] /= sum;
+}
+
+/* ---------- 프레임 처리 ---------- */
+function median(arr){ const s = arr.slice().sort((a,b)=>a-b); return s[s.length>>1]; }
+function pushMed(k, v){ const h = hist5[k]; h.push(v); if (h.length > 5) h.shift(); return median(h); }
+
+function processFrame(){
+  wctx.drawImage(video, 0, 0, PW, PH);
+  const d = wctx.getImageData(0, 0, PW, PH).data;
+  for (let i=0, j=0; i<PW*PH; i++, j+=4){
+    const r=d[j], g=d[j+1], b=d[j+2];
+    const Y = (0.299*r + 0.587*g + 0.114*b)|0;
+    let cb = (128 - 0.1687*r - 0.3313*g + 0.5*b)|0, cr = (128 + 0.5*r - 0.4187*g - 0.0813*b)|0;
+    cb = cb<0?0:cb>255?255:cb; cr = cr<0?0:cr>255?255:cr;
+    bins[i] = ((Y>>5)<<8) | ((cb>>4)<<4) | (cr>>4);
+  }
+  geometry();
+
+  // 기준 영역: 화면 아래 16%, 가운데 40% (발 바로 앞 바닥)
+  const y0 = Math.floor(PH*0.84), x0 = Math.floor(PW*0.3), x1 = Math.ceil(PW*0.7);
+  rawH.fill(0);
+  for (let y=y0; y<PH; y++) for (let x=x0; x<x1; x++) rawH[bins[y*PW+x]]++;
+  blurHist(rawH, newH);
+
+  const T = S.sens * 0.001;
+  if (learnFrames > 0){
+    if (!histReady && learnFrames === LEARN_N) hist.set(newH);
+    else for (let i=0; i<NB; i++) hist[i] = hist[i]*0.7 + newH[i]*0.3;
+    learnFrames--;
+    if (learnFrames === 0){ histReady = true; say('learn', '바닥 학습 완료', 0); $('#learnBadge').hidden = true; }
+  }
+  // 기준 영역이 이미 바닥으로 잘 맞을 때만 천천히 적응(조명 변화 대응)
+  let refOk = 0, refN = 0;
+  for (let y=y0; y<PH; y++) for (let x=x0; x<x1; x++){ refN++; if (hist[bins[y*PW+x]] > T) refOk++; }
+  Z.refRatio = refN ? refOk/refN : 0;
+  if (histReady && learnFrames === 0 && Z.refRatio > 0.75)
+    for (let i=0; i<NB; i++) hist[i] = hist[i]*0.97 + newH[i]*0.03;
+
+  for (let i=0; i<PW*PH; i++) mask[i] = hist[bins[i]] > T ? 1 : 0;
+
+  // 열마다 아래에서 위로 훑어 처음 만나는 '바닥 아님'(3칸 연속) 지점
+  for (let x=0; x<PW; x++){
+    let run = 0, by = -1, top = 0;
+    for (let y=PH-1; y>=0; y--){
+      if (rowDist[y] > MAXD){ top = y+1; break; }
+      if (!mask[y*PW+x]){ if (++run >= 3){ by = y+2; break; } } else run = 0;
+    }
+    colY[x] = by >= 0 ? by : top;
+    tmpCol[x] = by >= 0 ? rowDist[by] : Infinity;
+  }
+  // 좌우 잡음 제거: 5열 중앙값
+  for (let x=0; x<PW; x++){
+    const w = [];
+    for (let k=-2; k<=2; k++){ const xx = Math.min(PW-1, Math.max(0, x+k)); w.push(tmpCol[xx]); }
+    colDist[x] = median(w);
+  }
+
+  // 구역별 가장 가까운 거리
+  let dC=Infinity, dL=Infinity, dR=Infinity, sumL=0, nL=0, sumR=0, nR=0;
+  for (let x=0; x<PW; x++){
+    const dd = colDist[x], nx = ((x+0.5) - PW/2)/(PW/2);
+    if (x < PW/2){ sumL += Math.min(dd, MAXD); nL++; } else { sumR += Math.min(dd, MAXD); nR++; }
+    if (!isFinite(dd)) continue;
+    const yy = Math.min(PH-1, Math.max(0, colY[x]));
+    const lat = rowSlant[yy] * nx * th;
+    if (Math.abs(lat) <= S.halfW) dC = Math.min(dC, dd);
+    else if (Math.abs(lat) <= S.halfW + 0.9){
+      const e = Math.hypot(dd, lat);
+      if (lat < 0) dL = Math.min(dL, e); else dR = Math.min(dR, e);
+    }
+  }
+  Z.C = pushMed('C', dC); Z.L = pushMed('L', dL); Z.R = pushMed('R', dR);
+  const avgL = sumL/(nL||1), avgR = sumR/(nR||1);
+  Z.guide = avgL > avgR + 0.3 ? 'L' : avgR > avgL + 0.3 ? 'R' : null;
+
+  // 1.2m 앞 통로 폭
+  Z.width = null; Z.widthOpen = false;
+  const D = 1.2;
+  let yD = -1, best = 1e9;
+  for (let y=0; y<PH; y++){ const e = Math.abs(rowDist[y]-D); if (e < best){ best = e; yD = y; } }
+  const cxi = PW>>1;
+  if (yD >= 0 && best < 0.25 && colDist[cxi] > D){
+    let a = cxi, b = cxi;
+    while (a > 0 && colDist[a-1] > D) a--;
+    while (b < PW-1 && colDist[b+1] > D) b++;
+    Z.width = (b - a + 1)/PW * 2 * th * rowSlant[yD];
+    Z.widthOpen = (a === 0 || b === PW-1);
+  }
+
+  if (histReady) decide();
+}
+
+/* ---------- 경고 판단 ---------- */
+let lastNarrow = 0, lastBlock = 0;
+function decide(){
+  const hyst = (on, d, range) => on ? d < range*1.15 : d < range;
+  const wasC = A.C;
+  A.C = hyst(A.C, Z.C, S.centerRange);
+  A.L = hyst(A.L, Z.L, S.sideRange);
+  A.R = hyst(A.R, Z.R, S.sideRange);
+  const now = performance.now();
+  if (A.C && !wasC && now - lastBlock > 5000){
+    lastBlock = now;
+    if (S.guide && Z.guide) say('block', Z.guide === 'L' ? '앞 막힘, 왼쪽' : '앞 막힘, 오른쪽', 0);
+  }
+  if (!A.C && Z.width != null && !Z.widthOpen && Z.width < 0.7 && now - lastNarrow > 6000){
+    lastNarrow = now; say('narrow', '좁은 통로', 0);
+  }
+  if (Math.min(Z.C, Z.L, Z.R) < 0.6 && S.vib && navigator.vibrate) navigator.vibrate(120);
+}
+
+/* ---------- 소리 ---------- */
+let ac = null, master = null;
+const ch = {C:{next:0}, L:{next:0}, R:{next:0}, G:{next:0}};
+function initAudio(){
+  if (ac) { ac.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  ac = new AC(); master = ac.createGain(); master.gain.value = S.vol; master.connect(ac.destination);
+  // iOS 잠금 해제용 무음
+  const o = ac.createOscillator(), g = ac.createGain(); g.gain.value = 0; o.connect(g); g.connect(master); o.start(); o.stop(ac.currentTime+0.05);
+}
+function tone(t, pan, freq, len, vol, type){
+  const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), g2 = ac.createGain();
+  o.type = type || 'sine'; o.frequency.value = freq;
+  o2.type = 'sine'; o2.frequency.value = freq*2.01; g2.gain.value = type === 'triangle' ? 0 : 0.22;
+  o.connect(g); o2.connect(g2); g2.connect(g);
+  if (ac.createStereoPanner){ const p = ac.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(master); }
+  else g.connect(master);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.001, vol), t + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  o.start(t); o2.start(t); o.stop(t+len+0.03); o2.stop(t+len+0.03);
+}
+function loop(c, active, interval, fn){
+  const now = ac.currentTime;
+  if (!active){ c.next = 0; return; }
+  if (c.next < now) c.next = now + 0.01;
+  while (c.next < now + 0.12){ fn(c.next); c.next += interval; }
+}
+function rhythm(d, range){
+  if (d < 0.6) return {iv:0.1, len:0.095, vol:1};          // 거의 연속음
+  const t = Math.max(0, Math.min(1, (d - 0.6)/(range - 0.6)));
+  return {iv:0.13 + t*0.8, len:0.11, vol:0.4 + 0.6*(1-t)};
+}
+function scheduler(){
+  if (!ac || !running || !histReady) return;
+  if (A.C){
+    const r = rhythm(Z.C, S.centerRange);
+    loop(ch.C, true, r.iv, t => tone(t, 0, 520, r.len, r.vol));
+    loop(ch.L, false); loop(ch.R, false);            // 정면이 우선, 측면은 쉼
+    loop(ch.G, S.guide && Z.guide != null && Z.C < 1.6, 1.6,
+         t => tone(t, Z.guide === 'L' ? -1 : 1, 330, 0.35, 0.35, 'triangle'));
+  } else {
+    loop(ch.C, false); loop(ch.G, false);
+    const rl = rhythm(Z.L, S.sideRange), rr = rhythm(Z.R, S.sideRange);
+    loop(ch.L, A.L, rl.iv, t => tone(t, -1, 784, rl.len, rl.vol));
+    loop(ch.R, A.R, rr.iv, t => tone(t, 1, 784, rr.len, rr.vol));
+  }
+}
+
+/* ---------- 음성 ---------- */
+const lastSaid = {};
+function say(key, text, cool){
+  if (!S.voice || !window.speechSynthesis) return;
+  const now = performance.now();
+  if (cool && lastSaid[key] && now - lastSaid[key] < cool) return;
+  lastSaid[key] = now;
+  const u = new SpeechSynthesisUtterance(text); u.lang = 'ko-KR'; u.rate = 1.25;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+/* ---------- 화면 ---------- */
+const fmt = d => isFinite(d) ? d.toFixed(1) + 'm' : '—';
+let lastUI = 0;
+function draw(){
+  const W = view.width, H = view.height;
+  if (!S.debug){
+    vctx.fillStyle = '#000'; vctx.fillRect(0,0,W,H);
+    vctx.fillStyle = '#a3a39a'; vctx.font = `${Math.round(W/18)}px sans-serif`; vctx.textAlign = 'center';
+    vctx.fillText('분석 화면 꺼짐 (소리는 동작 중)', W/2, H/2);
+  } else {
+    vctx.drawImage(video, 0, 0, W, H);
+    const px = ovlImg.data;
+    for (let i=0, j=0; i<PW*PH; i++, j+=4){
+      if (mask[i]){ px[j]=61; px[j+1]=220; px[j+2]=132; px[j+3]=110; } else px[j+3]=0;
+    }
+    octx.putImageData(ovlImg, 0, 0);
+    vctx.imageSmoothingEnabled = false; vctx.drawImage(ovl, 0, 0, W, H); vctx.imageSmoothingEnabled = true;
+    const sx = W/PW, sy = H/PH;
+    // 장애물 경계선
+    vctx.strokeStyle = '#ff4d3d'; vctx.lineWidth = Math.max(2, W/150); vctx.beginPath();
+    for (let x=0; x<PW; x++){ const X=(x+0.5)*sx, Y=colY[x]*sy; x ? vctx.lineTo(X,Y) : vctx.moveTo(X,Y); }
+    vctx.stroke();
+    // 내 몸 폭 통로 선
+    vctx.strokeStyle = '#5ec8ff'; vctx.lineWidth = Math.max(1.5, W/220); vctx.setLineDash([8,6]);
+    for (const sgn of [-1, 1]){
+      vctx.beginPath(); let started = false;
+      for (let y=PH-1; y>=0; y--){
+        if (!isFinite(rowSlant[y]) || rowDist[y] > MAXD) break;
+        const nx = sgn * S.halfW / (rowSlant[y]*th);
+        if (Math.abs(nx) > 1.2) continue;
+        const X = (PW/2 + nx*PW/2)*sx, Y = (y+0.5)*sy;
+        started ? vctx.lineTo(X,Y) : (vctx.moveTo(X,Y), started = true);
+      }
+      vctx.stroke();
+    }
+    vctx.setLineDash([]);
+    // 학습 영역
+    vctx.strokeStyle = '#ffd400'; vctx.lineWidth = 2;
+    vctx.strokeRect(Math.floor(PW*0.3)*sx, Math.floor(PH*0.84)*sy, (Math.ceil(PW*0.7)-Math.floor(PW*0.3))*sx, (PH-Math.floor(PH*0.84))*sy);
+  }
+  const now = performance.now();
+  if (now - lastUI > 200){
+    lastUI = now;
+    const setCell = (id, d, on) => { const c = $(id); c.querySelector('b').textContent = fmt(d);
+      c.classList.toggle('alert', on); c.classList.toggle('near', on && d < 0.6); };
+    setCell('#cL', Z.L, A.L && !A.C); setCell('#cC', Z.C, A.C); setCell('#cR', Z.R, A.R && !A.C);
+    const w = $('#cW');
+    w.querySelector('b').textContent = Z.width == null ? '—' : (Z.widthOpen ? '≥' : '') + Z.width.toFixed(1) + 'm';
+    w.classList.toggle('narrow', Z.width != null && !Z.widthOpen && Z.width < 0.7);
+    const p = getPitch();
+    const src = (S.pitchAuto && pitchSensor != null) ? '센서' : '수동';
+    const pClass = p < 10 || p > 60 ? 'bad' : '';
+    const pMsg = p < 10 ? ' (더 숙이세요)' : p > 60 ? ' (너무 숙임)' : '';
+    $('#meta').innerHTML =
+      `<span class="${pClass}">기울기 ${p.toFixed(0)}° ${src}${pMsg}</span>` +
+      `<span>바닥 일치 ${(Z.refRatio*100).toFixed(0)}%</span>` +
+      `<span>${fps.toFixed(0)} fps</span>`;
+    if (p < 8) say('tilt', '카메라를 조금 아래로 숙이세요', 10000);
+  }
+}
+
+let fps = 0, lastT = 0;
+function frame(t){
+  if (!running) return;
+  rafId = requestAnimationFrame(frame);
+  if (video.readyState < 2) return;
+  if (t - lastProc < 66) return;          // 약 15fps
+  if (lastT) fps = fps*0.9 + (1000/(t - lastT))*0.1;
+  lastT = t; lastProc = t;
+  processFrame(); draw();
+}
+
+/* ---------- 시작/정지 ---------- */
+const LEARN_N = 8;
+function startLearn(){
+  learnFrames = LEARN_N; histReady = false;
+  A.C = A.L = A.R = false; hist5.C = []; hist5.L = []; hist5.R = [];
+  $('#learnBadge').hidden = false;
+}
+async function keepAwake(){
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+}
+document.addEventListener('visibilitychange', () => { if (running && document.visibilityState === 'visible') keepAwake(); });
+
+function begin(){
+  allocate();
+  $('#startScreen').style.display = 'none';
+  $('#runScreen').style.display = 'flex';
+  running = true; lastProc = 0; lastT = 0;
+  startLearn();
+  keepAwake();
+  clearInterval(schedTimer); schedTimer = setInterval(scheduler, 40);
+  rafId = requestAnimationFrame(frame);
+}
+
+$('#btnStart').addEventListener('click', async () => {
+  $('#err').textContent = '';
+  initAudio();
+  say('start', '시작합니다. 발 앞 바닥을 비춰 주세요', 0);
+  let oriP = null;
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function')
+    oriP = DeviceOrientationEvent.requestPermission().catch(() => 'denied');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio:false,
+      video:{facingMode:{ideal:'environment'}, width:{ideal:640}, height:{ideal:480}}});
+  } catch(e) {
+    $('#err').textContent = '카메라를 열 수 없습니다. https 주소에서 열었는지, 카메라 권한을 허용했는지 확인하세요. (' + e.name + ')';
+    return;
+  }
+  const r = oriP ? await oriP : 'granted';
+  if (r === 'granted') window.addEventListener('deviceorientation', onOri);
+  video.srcObject = stream;
+  await video.play().catch(() => {});
+  if (video.readyState < 1) await new Promise(res => video.addEventListener('loadedmetadata', res, {once:true}));
+  begin();
+});
+
+$('#btnFile').addEventListener('click', () => { initAudio(); $('#fileIn').click(); });
+$('#fileIn').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  S.pitchAuto = false; syncUI();
+  video.srcObject = null; video.src = URL.createObjectURL(f); video.loop = true;
+  await new Promise(res => video.addEventListener('loadedmetadata', res, {once:true}));
+  await video.play().catch(() => {});
+  begin();
+});
+
+function stop(){
+  running = false; cancelAnimationFrame(rafId); clearInterval(schedTimer);
+  if (stream) stream.getTracks().forEach(t => t.stop()); stream = null;
+  video.pause();
+  window.removeEventListener('deviceorientation', onOri);
+  try { wakeLock && wakeLock.release(); } catch(e) {} wakeLock = null;
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  for (const k in ch) ch[k].next = 0;
+  $('#runScreen').style.display = 'none';
+  $('#startScreen').style.display = 'flex';
+}
+$('#btnStop').addEventListener('click', stop);
+$('#btnLearn').addEventListener('click', () => { startLearn(); say('relearn', '바닥 다시 학습', 0); });
+$('#stage').addEventListener('click', () => { startLearn(); say('relearn', '바닥 다시 학습', 0); });
+})();
+</script>
+</body>
+</html>
