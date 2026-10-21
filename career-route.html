@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>특성화고 진로 노선도</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+:root{
+  --bg:#EEF2F5; --paper:#FFFFFF; --ink:#18232E; --ink2:#55636F; --rule:#D5DDE3;
+  --go:#2546C7; --go-ink:#FFFFFF; --soft:#E3E9F7;
+  --l1:#0E8F67; --l2:#E2711D; --l3:#7A4FD6; --warn:#B4361F;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121820; --paper:#1B232D; --ink:#E8EDF2; --ink2:#9DAAB6; --rule:#2E3A46;
+    --go:#6E8BFF; --go-ink:#0D1320; --soft:#253152;
+    --l1:#3CC79A; --l2:#F2954D; --l3:#A98BF0; --warn:#F07B63; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121820; --paper:#1B232D; --ink:#E8EDF2; --ink2:#9DAAB6; --rule:#2E3A46;
+  --go:#6E8BFF; --go-ink:#0D1320; --soft:#253152;
+  --l1:#3CC79A; --l2:#F2954D; --l3:#A98BF0; --warn:#F07B63; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 "Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+a{color:var(--go)}
+:focus-visible{outline:3px solid var(--go);outline-offset:2px;border-radius:6px}
+.wrap{max-width:680px;margin:0 auto;padding-block:20px 64px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+
+/* route progress: a real sequence of sections */
+.route{display:flex;align-items:center;gap:0;margin:4px 0 22px}
+.route .st{display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:0}
+.route .dot{width:14px;height:14px;border-radius:50%;border:3px solid var(--rule);background:var(--paper)}
+.route .lbl{font-size:11px;color:var(--ink2);margin-top:4px;white-space:nowrap}
+.route .seg{flex:1 1 auto;height:4px;background:var(--rule);margin:0 2px;transform:translateY(-9px)}
+.route .done .dot{background:var(--go);border-color:var(--go)}
+.route .seg.done{background:var(--go)}
+.route .now .dot{border-color:var(--go);box-shadow:0 0 0 4px var(--soft)}
+.route .now .lbl{color:var(--ink);font-weight:700}
+
+.panel{background:var(--paper);border-radius:var(--r);padding:28px 24px;border:1px solid var(--rule)}
+h1{font-size:30px;line-height:1.25;margin:0 0 12px;letter-spacing:-.02em}
+h2{font-size:22px;line-height:1.35;margin:0 0 10px;letter-spacing:-.01em}
+h3{font-size:17px;margin:0 0 6px}
+p{margin:0 0 12px}
+.muted{color:var(--ink2)}
+.small{font-size:14px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:13px 22px;background:var(--go);color:var(--go-ink);font-weight:700;cursor:pointer;min-height:48px}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--rule)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+
+/* hero */
+.hero-line{height:8px;border-radius:4px;margin:0 0 22px;background:linear-gradient(90deg,var(--l1) 0 33%,var(--l2) 33% 66%,var(--l3) 66% 100%)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0 22px}
+.facts div{border-top:3px solid var(--rule);padding-top:8px}
+.facts b{display:block;font-size:22px}
+.facts span{font-size:13px;color:var(--ink2)}
+.field{display:flex;flex-direction:column;gap:6px;margin:0 0 18px}
+.field input{font:inherit;padding:12px 14px;border-radius:10px;border:1.5px solid var(--rule);background:var(--paper);color:var(--ink)}
+
+/* question */
+.qmeta{display:flex;justify-content:space-between;font-size:14px;color:var(--ink2);margin-bottom:10px}
+.qtext{font-size:21px;line-height:1.45;font-weight:700;margin:0 0 22px;min-height:3em;letter-spacing:-.01em}
+.likert{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.likert button{border:1.5px solid var(--rule);background:var(--paper);border-radius:12px;padding:12px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:84px}
+.likert .n{font-size:20px;font-weight:800}
+.likert .t{font-size:12px;color:var(--ink2);line-height:1.25;text-align:center}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choices button{text-align:left;border:1.5px solid var(--rule);background:var(--paper);border-radius:12px;padding:14px 16px;cursor:pointer;min-height:52px}
+.sel{border-color:var(--go)!important;background:var(--soft)!important}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair button{border:1.5px solid var(--rule);background:var(--paper);border-radius:14px;padding:22px 14px;cursor:pointer;font-weight:700;font-size:17px;min-height:110px}
+.vs{text-align:center;font-size:13px;color:var(--ink2);margin:10px 0 0}
+.nav{display:flex;justify-content:space-between;margin-top:22px}
+.linkbtn{background:none;border:0;color:var(--ink2);cursor:pointer;padding:8px 4px;text-decoration:underline;text-underline-offset:3px}
+
+/* interest chips */
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px;margin:14px 0}
+.chip{position:relative;border:1.5px solid var(--rule);background:var(--paper);border-radius:12px;padding:12px 10px;cursor:pointer;text-align:left;font-size:15px;min-height:64px}
+.chip .em{display:block;font-size:22px;line-height:1}
+.chip .rk{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:var(--go);color:var(--go-ink);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+/* checks */
+.checks{display:flex;flex-direction:column;gap:10px;margin:10px 0 18px}
+.checks label{display:flex;gap:10px;align-items:center;border:1.5px solid var(--rule);border-radius:12px;padding:12px 14px;cursor:pointer}
+.checks input{width:20px;height:20px;accent-color:var(--go)}
+
+/* gauge */
+.gauge{position:relative;height:14px;border-radius:7px;background:linear-gradient(90deg,#9AA9B6 0 35%,#C9D3DB 35% 65%,var(--go) 65% 100%);margin:30px 0 46px}
+.gauge .mk{position:absolute;top:-9px;width:4px;height:32px;background:var(--ink);border-radius:2px;transform:translateX(-2px)}
+.gauge .mk b{position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:15px;white-space:nowrap}
+.gauge .ax{position:absolute;top:20px;font-size:12px;color:var(--ink2);transform:translateX(-50%);white-space:nowrap}
+.verdict{font-size:26px;font-weight:800;margin:4px 0 8px;letter-spacing:-.02em}
+.note{border-left:4px solid var(--go);background:var(--soft);padding:12px 14px;border-radius:0 10px 10px 0;margin:14px 0;font-size:15px}
+.note.warn{border-color:var(--warn);background:transparent;border:1.5px solid var(--warn);border-left-width:4px}
+
+/* result lines (the memorable element) */
+.lines{display:flex;flex-direction:column;gap:18px;margin-top:18px}
+.line{background:var(--paper);border-radius:var(--r);border:1px solid var(--rule);overflow:hidden}
+.line-head{display:flex;gap:14px;align-items:center;padding:16px 18px;border-bottom:1px solid var(--rule)}
+.badge{flex:0 0 auto;width:44px;height:44px;border-radius:50%;color:#fff;font-weight:900;font-size:20px;display:flex;align-items:center;justify-content:center}
+.line-head h3{font-size:20px;margin:0}
+.score{margin-left:auto;text-align:right;font-size:13px;color:var(--ink2);white-space:nowrap;flex:0 0 auto}
+.score b{display:block;font-size:22px;color:var(--ink)}
+.why{padding:12px 18px 4px;margin:0;list-style:none}
+.why li{position:relative;padding-left:18px;margin:0 0 6px;font-size:15px}
+.why li::before{content:"";position:absolute;left:2px;top:.6em;width:8px;height:8px;border-radius:50%;background:var(--lc)}
+.meta{padding:0 18px 10px;font-size:14px;color:var(--ink2)}
+.career{margin:4px 18px 12px;padding:12px 14px;border-radius:12px;background:var(--bg)}
+.career h4{margin:0 0 8px;font-size:15px}
+.career dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:start}
+.career dt{font-size:13px;font-weight:700;color:var(--ink2);padding-top:3px;white-space:nowrap}
+.career dd{margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.career .tag{font-size:13px;padding:3px 10px;border-radius:999px;background:var(--paper);border:1px solid var(--rule)}
+.career .tag.now{border-color:var(--lc);border-width:1.5px}
+.career .plain{font-size:14px;padding-top:2px}
+.stations{position:relative;margin:6px 18px 16px 18px;padding-left:30px}
+.stations::before{content:"";position:absolute;left:10px;top:12px;bottom:12px;width:6px;border-radius:3px;background:var(--lc)}
+.sta{position:relative;padding:10px 0}
+.sta::before{content:"";position:absolute;left:-26px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--paper);border:4px solid var(--lc)}
+.sta .nm{font-weight:800}
+.sta .dp{font-weight:600}
+.sta .inf{font-size:13px;color:var(--ink2)}
+.more{margin:0 18px 16px}
+.empty{padding:6px 18px 16px;font-size:14px;color:var(--ink2)}
+.others{margin-top:22px}
+.others table{width:100%;border-collapse:collapse;font-size:14px}
+.others td{padding:7px 4px;border-bottom:1px solid var(--rule)}
+.others td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+
+dialog{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);color:var(--ink);max-width:420px;width:calc(100% - 32px);padding:22px}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+.grid2{display:grid;grid-template-columns:1fr 110px;gap:10px 12px;align-items:center;margin:14px 0}
+.grid2 input{font:inherit;padding:8px 10px;border:1.5px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink)}
+footer{margin-top:28px;font-size:13px;color:var(--ink2);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+@media (max-width:480px){
+  h1{font-size:26px}
+  .qtext{font-size:19px}
+  .likert{gap:5px}
+  .likert .t{font-size:11px}
+  .panel{padding:22px 18px}
+  .route .lbl{display:none}
+  .route .now .lbl{display:block;position:absolute;margin-top:22px}
+  .route .st{position:relative}
+  .route{margin-bottom:34px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .fade{animation:f .25s ease-out}
+  @keyframes f{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .noprint,.route,footer{display:none!important}
+  .line,.panel{break-inside:avoid;border-color:#bbb}
+  .wrap{max-width:none;padding:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="route" class="route noprint" aria-label="진행 단계"></div>
+  <main id="app" aria-live="polite"></main>
+  <footer class="noprint">
+    <span id="ver"></span>
+    <button class="linkbtn" id="openSet">교사용 설정</button>
+  </footer>
+</div>
+
+<dialog id="setDlg">
+  <h2>교사용 설정</h2>
+  <p class="small muted">이 화면에서만 적용되고 저장되지 않습니다.</p>
+  <div class="grid2">
+    <label for="sW">관심분야 가중치</label><input id="sW" type="number" step="0.05" min="0" max="0.6">
+    <label for="sHi">특성화고 권장 기준 (이상)</label><input id="sHi" type="number" step="1" min="0" max="100">
+    <label for="sLo">일반고 권장 기준 (미만)</label><input id="sLo" type="number" step="1" min="0" max="100">
+    <label for="sLow">저점 경고 기준</label><input id="sLow" type="number" step="1" min="0" max="100">
+  </div>
+  <div class="row between"><button class="btn ghost" id="setCancel">닫기</button><button class="btn" id="setSave">적용</button></div>
+</dialog>
+
+<script>
+const DATA = {"version":"v0.6 (2027학년도 요강)","groups":[{"id":"G01","name":"소프트웨어·AI","ncs":"20","codes":["IT"],"depts":"소프트웨어과, AI소프트웨어과, 스마트IT과","certs":"정보처리기능사, 리눅스마스터","jobs":"SW개발자, AI엔지니어","h":[0.2,0.9,0.4,0.1,0.2,0.6],"c":[1.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.6],"s":[0.1,0.5,0.1,0.2,0.8,0.7],"career":{"now":["웹·앱 개발자(주니어)","소프트웨어 테스터(QA)","AI 학습 데이터 관리원","IT 기술지원 담당"],"more":["AI 엔지니어","데이터 분석가","소프트웨어 설계자"],"univ":["컴퓨터공학과","소프트웨어학과","인공지능학과"]}},{"id":"G02","name":"정보보안·네트워크","ncs":"20","codes":["IT"],"depts":"정보보호과, 사이버보안과, 네트워크과","certs":"정보처리기능사, 네트워크관리사","jobs":"보안관제요원, 네트워크엔지니어","h":[0.4,0.8,0.1,0.1,0.2,0.8],"c":[1.0,0.0,0.3,0.0,0.0,0.0,0.6,0.0,0.0,0.0,0.6],"s":[0.3,0.4,0.1,0.4,0.9,0.4],"career":{"now":["보안관제요원","네트워크 유지보수 기술자","서버·시스템 운영원"],"more":["모의해킹 전문가(화이트해커)","정보보안 컨설턴트","디지털 포렌식 전문가"],"univ":["정보보호학과","사이버보안학과","컴퓨터공학과"]}},{"id":"G03","name":"게임 개발·기획","ncs":"20, 08","codes":["GAME","IT"],"depts":"게임과, 게임콘텐츠과, 게임개발과","certs":"정보처리기능사, 컴퓨터그래픽스운용기능사","jobs":"게임프로그래머, 게임기획자","h":[0.2,0.7,0.8,0.2,0.4,0.3],"c":[1.0,0.0,0.0,0.6,0.0,0.0,0.0,0.0,0.0,0.4,0.4],"s":[0.1,0.7,0.2,0.1,0.6,0.9],"career":{"now":["게임 테스터(QA)","게임 운영자(GM)","주니어 게임 클라이언트 개발자"],"more":["게임 기획자","게임 프로그래머","게임 엔진 개발자"],"univ":["게임공학과","게임콘텐츠학과","컴퓨터공학과"]}},{"id":"G04","name":"방송·영상 제작","ncs":"08, 20","codes":["MEDIA"],"depts":"방송영상과, 영상콘텐츠과, 미디어콘텐츠과","certs":"방송통신기능사, GTQ","jobs":"영상편집자, 방송기술직","h":[0.5,0.3,0.9,0.4,0.5,0.3],"c":[0.7,0.0,0.0,0.5,0.0,0.4,0.0,0.3,0.0,1.0,0.0],"s":[0.6,0.9,0.4,0.4,0.2,0.9],"career":{"now":["영상 편집자","촬영 보조","방송 송출·음향 기술 보조","조명 보조"],"more":["방송 PD","촬영감독","방송사 기술직"],"univ":["방송영상과","영화영상학과","미디어커뮤니케이션학과"]}},{"id":"G05","name":"시각·UX 디자인","ncs":"08","codes":["DSN"],"depts":"시각디자인과, 디지털디자인과, 콘텐츠디자인과","certs":"웹디자인개발기능사, 컴퓨터그래픽스운용기능사","jobs":"그래픽디자이너, UI/UX디자이너","h":[0.2,0.3,1.0,0.2,0.3,0.4],"c":[0.7,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"s":[0.1,0.5,0.2,0.2,0.3,1.0],"career":{"now":["그래픽 디자이너(주니어)","웹디자이너","편집 디자이너"],"more":["UI/UX 디자이너","브랜드 디자이너","아트디렉터"],"univ":["시각디자인과","디지털미디어디자인과","산업디자인과"]}},{"id":"G06","name":"웹툰·애니메이션","ncs":"08","codes":["DSN","GAME"],"depts":"웹툰과, 애니메이션과, 만화창작과","certs":"컴퓨터그래픽스운용기능사, GTQ","jobs":"웹툰작가, 애니메이터","h":[0.2,0.3,1.0,0.1,0.2,0.3],"c":[0.6,0.5,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"s":[0.0,0.3,0.1,0.2,0.1,1.0],"career":{"now":["웹툰 어시스턴트(채색·배경)","캐릭터 일러스트레이터","2D 애니메이터"],"more":["웹툰 작가","3D 애니메이터","캐릭터 디자이너"],"univ":["만화애니메이션과","웹툰학과","영상애니메이션학과"]}},{"id":"G07","name":"공연·실용예술","ncs":"08","codes":["ART"],"depts":"실용음악과, 연기과, 공연예술과","certs":"(민간자격 위주)","jobs":"연주자, 공연기획자, 음향기술자","h":[0.3,0.1,1.0,0.6,0.6,0.1],"c":[0.0,0.0,0.0,0.0,0.0,0.6,0.0,0.6,0.0,1.0,0.0],"s":[0.7,0.9,0.7,0.2,0.1,0.8],"career":{"now":["공연 무대·음향 스태프","공연장 운영 스태프","음향 엔지니어 보조"],"more":["실용음악 연주자·보컬","배우·뮤지컬 배우","공연기획자"],"univ":["실용음악과","연극영화과","공연예술학과"]}},{"id":"G08","name":"전기·에너지","ncs":"19, 23","codes":["ELEC","ENV"],"depts":"전기과, 전기에너지과, 신재생에너지과","certs":"전기기능사","jobs":"전기기술자, 공기업 전기직","h":[0.9,0.6,0.1,0.1,0.2,0.6],"c":[0.0,0.7,0.7,0.0,0.0,0.0,0.5,0.5,0.0,0.0,0.7],"s":[0.8,0.6,0.1,0.9,0.4,0.2],"career":{"now":["전기 설비 기능원","공기업·공공기관 전기직(고졸 채용)","발전설비 운전원","태양광 설비 시공원"],"more":["전기기사","전력 계통 엔지니어","에너지 관리 기사"],"univ":["전기공학과","전기전자공학과","에너지공학과"]}},{"id":"G09","name":"전자·반도체","ncs":"19","codes":["ELEC","SEMI"],"depts":"전자과, 반도체과, 스마트전자과","certs":"전자기기기능사, 전자캐드기능사","jobs":"반도체 장비·공정 기술자, 전자기기 기술자","h":[0.8,0.8,0.2,0.1,0.2,0.6],"c":[0.6,0.7,0.6,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.8],"s":[0.5,0.6,0.1,0.8,0.6,0.3],"career":{"now":["반도체 장비 유지보수원","반도체 생산 오퍼레이터","전자제품 검사원","전자기기 수리원"],"more":["반도체 공정 엔지니어","회로 설계 엔지니어","장비 개발 엔지니어"],"univ":["전자공학과","반도체공학과","신소재공학과"]}},{"id":"G10","name":"기계·스마트제조","ncs":"15, 16","codes":["MECH"],"depts":"기계과, 스마트기계과, 기계설계과","certs":"컴퓨터응용선반기능사, 전산응용기계제도기능사","jobs":"기계설계원, CNC가공원","h":[1.0,0.6,0.2,0.1,0.2,0.6],"c":[0.5,0.8,1.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.5],"s":[0.8,0.5,0.1,1.0,0.4,0.3],"career":{"now":["CNC 가공원","기계 조립원","용접원","설비 보전원"],"more":["기계 설계 엔지니어","생산기술 엔지니어","품질관리 기사"],"univ":["기계공학과","기계설계공학과","산업공학과"]}},{"id":"G11","name":"로봇·자동화","ncs":"15, 19","codes":["MECH","ELEC"],"depts":"로봇과, 자동화시스템과, 메카트로닉스과","certs":"생산자동화기능사, 전자기기기능사","jobs":"로봇정비원, 자동화설비 기술자","h":[0.9,0.8,0.3,0.1,0.3,0.5],"c":[0.7,0.7,0.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.7],"s":[0.6,0.7,0.1,0.9,0.6,0.5],"career":{"now":["자동화 설비 유지보수원","산업용 로봇 조작·티칭 기술자","PLC 제어 기술원"],"more":["로봇 엔지니어","제어시스템 엔지니어","스마트팩토리 엔지니어"],"univ":["로봇공학과","메카트로닉스공학과","제어계측공학과"]}},{"id":"G12","name":"자동차·모빌리티","ncs":"15","codes":["AUTO"],"depts":"자동차과, 자동차정비과, 미래자동차과","certs":"자동차정비기능사","jobs":"자동차정비원, 전기차 정비기술자","h":[1.0,0.5,0.1,0.2,0.3,0.4],"c":[0.0,0.8,1.0,0.0,0.0,0.0,0.0,0.7,0.0,0.0,0.4],"s":[0.9,0.6,0.3,1.0,0.3,0.2],"career":{"now":["자동차 정비원","전기차 정비 기술자","자동차 생산 기능원"],"more":["자동차 검사원","자동차 연구개발 엔지니어","정비 서비스 관리자"],"univ":["자동차공학과","미래자동차공학과","기계공학과"]}},{"id":"G13","name":"철도·항공·드론","ncs":"09, 15","codes":["AUTO","TOUR"],"depts":"철도운전과, 철도차량과, 항공정비과","certs":"철도차량정비기능사, 항공기정비기능사","jobs":"철도기관사, 항공정비사","h":[0.9,0.5,0.1,0.3,0.2,0.8],"c":[0.0,0.6,0.8,0.0,0.0,0.0,0.5,0.7,0.0,0.0,0.0],"s":[0.9,0.6,0.3,0.9,0.4,0.1],"career":{"now":["철도차량 정비원","철도 신호·전기 유지보수원","역무원(철도 고졸 채용)","드론 조종·촬영 기사"],"more":["철도 기관사(면허 취득 후)","항공정비사(자격 취득 후)","철도 관제사"],"univ":["철도운전시스템과","항공정비학과","드론공학과"]}},{"id":"G14","name":"건축·인테리어","ncs":"14, 22","codes":["ARCH"],"depts":"건축과, 실내건축과, 인테리어과","certs":"전산응용건축제도기능사, 실내건축기능사","jobs":"건축설계사무원, 인테리어디자이너, 시공기술자","h":[0.8,0.4,0.7,0.2,0.3,0.5],"c":[0.5,0.8,0.0,0.7,0.0,0.0,0.4,0.5,0.0,0.0,0.0],"s":[0.7,0.7,0.2,0.8,0.3,0.7],"career":{"now":["건축 도면(CAD) 작성원","인테리어 시공 기능원","목공·가구 제작원"],"more":["건축사","인테리어 디자이너","건축 시공 기술자"],"univ":["건축학과","실내건축학과","건축공학과"]}},{"id":"G15","name":"건설·플랜트·환경","ncs":"14, 23, 24","codes":["ENV","ARCH"],"depts":"토목과, 도시건설과, 환경과","certs":"측량기능사, 환경기능사","jobs":"측량기술자, 환경관리원, 시설직 공무원","h":[0.9,0.6,0.2,0.2,0.3,0.6],"c":[0.4,0.0,0.6,0.0,0.0,0.0,0.6,0.7,0.0,0.0,0.6],"s":[1.0,0.7,0.2,0.8,0.5,0.3],"career":{"now":["측량 기능원","건설 현장 기술원","플랜트 설비 기능원","환경 시설 운영원"],"more":["토목 기사","플랜트 엔지니어","환경 기사"],"univ":["토목공학과","환경공학과","도시공학과"]}},{"id":"G16","name":"화학·바이오","ncs":"17, 24","codes":["BIO"],"depts":"화학공업과, 바이오과, 바이오화학과","certs":"화학분석기능사","jobs":"품질분석원, 바이오 연구보조원","h":[0.6,1.0,0.2,0.1,0.1,0.7],"c":[0.0,0.6,0.0,0.0,0.0,0.0,0.6,0.0,0.0,0.0,1.0],"s":[0.3,0.5,0.1,0.7,0.7,0.4],"career":{"now":["화학 분석원(품질 검사)","제약·화장품 생산 기능원","실험실 연구 보조원"],"more":["연구원","화학공정 엔지니어","바이오 의약품 연구원"],"univ":["화학공학과","생명공학과","화장품과학과"]}},{"id":"G17","name":"회계·금융","ncs":"02, 03","codes":["BIZ"],"depts":"회계과, 금융정보과, 세무회계과","certs":"전산회계운용사, 컴퓨터활용능력","jobs":"은행 창구직(고졸채용), 회계사무원","h":[0.1,0.4,0.1,0.4,0.5,1.0],"c":[0.6,0.0,0.0,0.0,0.0,0.5,1.0,0.0,0.0,0.0,0.0],"s":[0.1,0.5,0.5,0.1,1.0,0.2],"career":{"now":["은행 창구 직원(고졸 채용)","회계 사무원","세무 사무원"],"more":["세무사","공인회계사","금융 분석가"],"univ":["회계학과","세무학과","금융학과"]}},{"id":"G18","name":"경영·사무·무역","ncs":"02, 01","codes":["BIZ"],"depts":"경영과, 사무행정과, 비즈니스과","certs":"ITQ, 워드프로세서, 컴퓨터활용능력","jobs":"사무원, 공공기관 사무직, 비서","h":[0.1,0.3,0.2,0.5,0.6,0.9],"c":[0.7,0.0,0.0,0.0,0.0,0.6,0.8,0.0,0.4,0.0,0.0],"s":[0.1,0.7,0.6,0.1,0.8,0.3],"career":{"now":["사무원(총무·인사)","공공기관 사무직(고졸 채용)","무역 사무원","비서"],"more":["관세사","경영기획 담당자","국제무역 전문가"],"univ":["경영학과","국제통상학과","행정학과"]}},{"id":"G19","name":"마케팅·유통·이커머스","ncs":"10, 02","codes":["MKT"],"depts":"마케팅과, 유통경영과, e-비즈니스과","certs":"유통관리사, 전자상거래운용사","jobs":"온라인MD, 마케터, 유통관리원","h":[0.1,0.3,0.6,0.6,1.0,0.5],"c":[0.6,0.0,0.0,0.4,0.0,0.8,0.5,0.0,0.0,0.0,0.0],"s":[0.3,0.7,0.8,0.2,0.6,0.7],"career":{"now":["온라인 쇼핑몰 MD 보조","매장 판매·관리원","라이브커머스 운영자","물류·유통 관리원"],"more":["마케터","브랜드 매니저","유통 MD"],"univ":["마케팅학과","유통경영학과","광고홍보학과"]}},{"id":"G20","name":"관광·항공서비스","ncs":"12, 09","codes":["TOUR"],"depts":"관광과, 항공서비스과, 호텔관광과, 관광컨벤션과","certs":"외국어 공인시험, 조주기능사","jobs":"항공 지상직, 호텔리어, 여행상품기획자","h":[0.2,0.2,0.4,1.0,0.7,0.4],"c":[0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.5,0.9,0.0,0.0],"s":[0.7,0.8,1.0,0.1,0.2,0.4],"career":{"now":["호텔 프런트 직원","공항 지상직(탑승 수속 등)","여행사 사무원","컨벤션 운영 스태프"],"more":["객실승무원","호텔 지배인","관광통역안내사(자격 취득 후)"],"univ":["항공서비스과","호텔경영학과","관광경영학과"]}},{"id":"G21","name":"조리·외식","ncs":"13","codes":["COOK"],"depts":"조리과, 외식조리과, 호텔조리과","certs":"한식조리기능사, 양식조리기능사","jobs":"조리사, 외식창업자","h":[0.8,0.2,0.6,0.4,0.4,0.4],"c":[0.0,0.7,0.0,0.0,1.0,0.0,0.0,0.7,0.0,0.0,0.0],"s":[0.8,0.7,0.5,0.8,0.1,0.5],"career":{"now":["조리사(한식·양식 등)","호텔·레스토랑 조리 보조","단체급식 조리원"],"more":["셰프(주방장)","푸드스타일리스트","외식 창업가"],"univ":["호텔조리과","외식조리학과","식품영양학과"]}},{"id":"G22","name":"제과제빵·카페","ncs":"21, 13","codes":["COOK","BIO"],"depts":"제과제빵과, 식품가공과, 베이커리과","certs":"제과기능사, 제빵기능사","jobs":"파티시에, 식품제조기술자","h":[0.8,0.4,0.7,0.3,0.3,0.6],"c":[0.0,0.8,0.0,0.4,1.0,0.0,0.0,0.0,0.0,0.0,0.4],"s":[0.7,0.5,0.3,0.8,0.3,0.6],"career":{"now":["제과·제빵사","바리스타","카페 매장 관리자"],"more":["파티시에(전문 제과사)","베이커리·카페 창업가","식품 제품 개발원"],"univ":["호텔제과제빵과","커피바리스타과","식품공학과"]}},{"id":"G23","name":"미용·뷰티","ncs":"12","codes":["BEAUTY"],"depts":"뷰티과, 헤어디자인과, 메이크업과, 피부미용과","certs":"미용사(일반·피부·메이크업·네일)","jobs":"헤어디자이너, 메이크업아티스트","h":[0.6,0.2,0.9,0.7,0.5,0.2],"c":[0.0,1.0,0.0,0.7,0.0,0.8,0.0,0.5,0.0,0.0,0.0],"s":[0.6,0.5,0.9,0.5,0.1,0.7],"career":{"now":["헤어 디자이너(인턴부터)","메이크업 아티스트","피부관리사","네일 아티스트"],"more":["미용실·뷰티숍 창업가","뷰티 교육 강사","화장품 교육·마케팅 담당"],"univ":["뷰티디자인과","피부미용과","화장품과학과"]}},{"id":"G24","name":"보건·간호","ncs":"06, 07","codes":["HEALTH"],"depts":"보건간호과, 간호과, 보건의료행정과","certs":"간호조무사","jobs":"간호조무사, 병원 원무직","h":[0.4,0.6,0.1,1.0,0.2,0.7],"c":[0.0,0.0,0.0,0.0,0.0,0.9,0.4,0.6,0.0,0.0,0.6],"s":[0.7,0.8,1.0,0.3,0.4,0.1],"career":{"now":["간호조무사(국가시험 합격 후)","병원 원무 사무원","의료기관 행정 보조"],"more":["간호사(간호학과 졸업 후 면허)","임상병리사","보건의료정보관리사"],"univ":["간호학과","임상병리학과","보건행정학과"]}},{"id":"G25","name":"패션·의류","ncs":"18","codes":["FASHION"],"depts":"패션디자인과, 의상디자인과, 패션산업과","certs":"양장기능사","jobs":"패션디자이너, 패턴사, 패션MD","h":[0.6,0.2,1.0,0.3,0.5,0.3],"c":[0.3,0.9,0.0,0.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"s":[0.4,0.5,0.4,0.6,0.1,0.9],"career":{"now":["패턴사 어시스턴트","의류 생산·봉제 기능원","패션 매장 판매·VMD"],"more":["패션 디자이너","패턴사","패션 MD"],"univ":["패션디자인학과","의류학과","패션마케팅학과"]}},{"id":"G26","name":"스포츠","ncs":"12","codes":["SPORTS"],"depts":"생활체육과, 스포츠경영과, e스포츠과, 스포츠과학시설과","certs":"스포츠경영관리사 등","jobs":"생활체육지도자, 스포츠마케터, e스포츠 운영","h":[0.7,0.3,0.1,0.7,0.7,0.2],"c":[0.3,0.0,0.0,0.0,0.0,0.6,0.3,1.0,0.0,0.0,0.0],"s":[0.8,0.9,0.8,0.3,0.3,0.3],"career":{"now":["체육 시설 운영원","스포츠센터 강습 보조","e스포츠 운영 스태프"],"more":["생활스포츠지도사(자격 취득 후)","스포츠 마케터","운동 트레이너"],"univ":["체육학과","스포츠경영학과","스포츠재활학과"]}},{"id":"G27","name":"공공안전·국방","ncs":"05","codes":["SAFETY"],"depts":"경찰행정과, 부사관과, 공공행정과, 소방시설관리과","certs":"소방설비기능사, 컴퓨터활용능력","jobs":"부사관, 소방시설 관리자, 공무원(경찰·소방)","h":[0.8,0.3,0.0,0.7,0.5,0.7],"c":[0.0,0.0,0.5,0.0,0.0,0.5,0.4,1.0,0.0,0.0,0.0],"s":[0.9,1.0,0.7,0.5,0.4,0.1],"career":{"now":["부사관(육·해·공군)","경찰공무원(순경 공채 준비)","소방시설 관리원","9급 공무원(공채 준비)"],"more":["소방공무원","소방설비기사","군 장교"],"univ":["경찰행정학과","소방안전학과","국방·군사학과"]}},{"id":"G28","name":"반려동물","ncs":"24","codes":["PET"],"depts":"반려동물과, 반려동물케어과, 스마트펫경영과","certs":"반려동물 관련 민간자격","jobs":"반려동물 미용사, 동물병원 보조, 펫샵 운영","h":[0.6,0.4,0.3,0.8,0.4,0.3],"c":[0.0,0.7,0.0,0.0,0.0,0.6,0.0,0.6,0.0,0.0,0.3],"s":[0.6,0.5,0.8,0.4,0.2,0.3],"career":{"now":["반려동물 미용사","반려동물 관리사(호텔·유치원)","동물병원 보조원"],"more":["동물보건사(관련 학과 졸업 후 국가시험)","반려동물 행동교정사","펫 창업가"],"univ":["반려동물학과","동물보건학과","애완동물관리과"]}},{"id":"G29","name":"영유아보육","ncs":"07","codes":["CARE"],"depts":"영유아보육과","certs":"(전문대 연계로 보육교사)","jobs":"보육교사, 유아교육 보조","h":[0.2,0.2,0.6,1.0,0.3,0.4],"c":[0.0,0.0,0.0,0.4,0.0,1.0,0.0,0.5,0.0,0.4,0.0],"s":[0.5,0.8,1.0,0.1,0.1,0.6],"career":{"now":["보육 보조 인력","아이돌보미(교육 이수 후)","키즈카페·놀이시설 직원"],"more":["보육교사(관련 학과 졸업 후)","유치원 교사(유아교육과 졸업 후)","놀이치료사"],"univ":["유아교육과","아동보육과","아동학과"]}},{"id":"G30","name":"미디어 크리에이터","ncs":"08","codes":["CREATOR","MEDIA"],"depts":"미디어콘텐츠과, 콘텐츠크리에이터과, 웹크리에이터과","certs":"GTQ, 멀티미디어콘텐츠제작전문가","jobs":"1인 크리에이터, 콘텐츠 PD, SNS 마케터","h":[0.2,0.3,0.9,0.5,0.8,0.3],"c":[0.7,0.0,0.0,0.5,0.0,0.6,0.0,0.0,0.0,1.0,0.0],"s":[0.3,0.5,0.6,0.2,0.4,1.0],"career":{"now":["영상 콘텐츠 제작자(촬영·편집)","SNS 콘텐츠 운영자","라이브방송 운영 스태프"],"more":["콘텐츠 PD","디지털 마케터","1인 크리에이터·MCN 기획자"],"univ":["미디어콘텐츠학과","디지털미디어학과","광고홍보학과"]}}],"codes":[{"code":"IT","name":"IT·SW·AI"},{"code":"GAME","name":"게임"},{"code":"DSN","name":"디자인·웹툰"},{"code":"MEDIA","name":"방송·영상"},{"code":"ART","name":"공연·음악·연기"},{"code":"MECH","name":"기계·로봇"},{"code":"ELEC","name":"전기·전자"},{"code":"SEMI","name":"반도체"},{"code":"AUTO","name":"자동차·철도·항공기술"},{"code":"ARCH","name":"건축·인테리어"},{"code":"ENV","name":"건설·환경·에너지"},{"code":"BIO","name":"화학·바이오·식품과학"},{"code":"BIZ","name":"경영·회계·금융"},{"code":"MKT","name":"마케팅·유통"},{"code":"TOUR","name":"관광·항공서비스"},{"code":"COOK","name":"조리·제과"},{"code":"BEAUTY","name":"미용·뷰티"},{"code":"HEALTH","name":"보건·간호"},{"code":"FASHION","name":"패션"},{"code":"SPORTS","name":"스포츠"},{"code":"SAFETY","name":"경찰·소방·국방"},{"code":"PET","name":"반려동물"},{"code":"CARE","name":"보육·돌봄"},{"code":"CREATOR","name":"1인 미디어·크리에이터"}],"schools":[{"type":"특성화고","name":"경기기계공업고등학교","gender":"공학","region":"전국","dorm":"있음","gu":"노원구","url":"https://ggmt.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 노원구 공릉로 264","lat":null,"lng":null},{"type":"특성화고","name":"경기상업고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"종로구","url":"https://ggc.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 종로구 자하문로 136","lat":null,"lng":null},{"type":"특성화고","name":"경복비즈니스고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"강서구","url":"https://kbb.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강서구 등촌동 화곡로 379","lat":null,"lng":null},{"type":"특성화고","name":"고명외식고등학교","gender":"공학","region":"서울·인천·경기","dorm":"없음","gu":"성북구","url":"https://komyung.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 성북구 북악산로 870","lat":null,"lng":null},{"type":"특성화고","name":"광신방송예술고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"관악구","url":"https://ksmedia.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 관악구 신림동 광신길 141","lat":null,"lng":null},{"type":"특성화고","name":"광운인공지능고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"노원구","url":"https://kwangwoon.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 노원구 광운로1길 24","lat":null,"lng":null},{"type":"특성화고","name":"단국대학교부속소프트웨어고등학교","gender":"남","region":"전국","dorm":"없음","gu":"강남구","url":"https://dankook.sen.hs.kr","mode":"공통모집(2학년 분과)","addr":"서울특별시 강남구 대치동 도곡로64길 21","lat":null,"lng":null},{"type":"특성화고","name":"대경생활과학고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"중구","url":"http://www.daekyeong.hs.kr","mode":"학과별 모집","addr":"서울특별시 중구 매봉18길 111","lat":null,"lng":null},{"type":"특성화고","name":"대동세무고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"종로구","url":"https://daedong.sen.hs.kr","mode":"공통모집(2학년 분과)","addr":"서울특별시 종로구 계동길 84-10","lat":null,"lng":null},{"type":"특성화고","name":"대일관광고등학교","gender":"여","region":"전국","dorm":"없음","gu":"양천구","url":"https://daeil-tour.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 양천구 신정이펜1로 11","lat":null,"lng":null},{"type":"특성화고","name":"대진디자인고등학교","gender":"공학","region":"서울·인천·경기","dorm":"없음","gu":"강남구","url":"https://daejindesign.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강남구 수서동 광평로39길 93","lat":null,"lng":null},{"type":"특성화고","name":"덕일전자공업고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"구로구","url":"https://di.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 구로구 오류동 서해안로21길 5-12","lat":null,"lng":null},{"type":"특성화고","name":"동명생활경영고등학교","gender":"여","region":"전국","dorm":"없음","gu":"은평구","url":"http://dmgcab.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 은평구 통일로 793","lat":null,"lng":null},{"type":"특성화고","name":"리라아트고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"중구","url":"https://lila.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 중구 예장동 소파로2길 24","lat":null,"lng":null},{"type":"특성화고","name":"미래산업과학고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"노원구","url":"https://mist.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 노원구 중계동 덕릉로82길 54","lat":null,"lng":null},{"type":"특성화고","name":"상일미디어고등학교","gender":"공학","region":"서울·경기","dorm":"없음","gu":"강동구","url":"","mode":"학과별 모집","addr":"서울특별시 강동구 천호대로219길 61","lat":null,"lng":null},{"type":"특성화고","name":"서서울생활과학고등학교","gender":"공학","region":"서울·인천·경기","dorm":"없음","gu":"구로구","url":"https://ssls.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 구로구 오리로 1355-10","lat":null,"lng":null},{"type":"특성화고","name":"서울공업고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"동작구","url":"http://seoul-th.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 동작구 대방동1길 46","lat":null,"lng":null},{"type":"특성화고","name":"서울관광고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"관악구","url":"https://seoul-tour.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 관악구 봉천동 은천로15길 25","lat":null,"lng":null},{"type":"특성화고","name":"서울금융고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"양천구","url":"https://seoulfc.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 양천구 신월동 가로공원로61길","lat":null,"lng":null},{"type":"특성화고","name":"서울동구고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"성북구","url":"http://donggoo.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 성북구 성북로8길 71","lat":null,"lng":null},{"type":"특성화고","name":"서울동산고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"노원구","url":"https://seouldongsan.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 노원구 공릉로 257","lat":null,"lng":null},{"type":"특성화고","name":"서울디자인고등학교","gender":"공학","region":"서울·인천·경기","dorm":"없음","gu":"마포구","url":"https://seodi.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 마포구 염리동 백범로 139","lat":null,"lng":null},{"type":"특성화고","name":"서울디지털콘텐츠고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"강서구","url":"https://sdcont.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강서구 방화대로47길 9","lat":null,"lng":null},{"type":"특성화고","name":"서울디지텍고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"용산구","url":"http://www.sdh.hs.kr","mode":"공통모집(2학년 분과)","addr":"서울특별시 용산구 회나무로12길 27","lat":null,"lng":null},{"type":"특성화고","name":"서울매그넷고등학교","gender":"여","region":"전국","dorm":"없음","gu":"금천구","url":"https://seoulmagnet.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 금천구 시흥동 탑골로10길 45","lat":null,"lng":null},{"type":"특성화고","name":"서울문화고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"도봉구","url":"https://seoulculture.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 도봉구 방학동 마들로 598","lat":null,"lng":null},{"type":"특성화고","name":"서울방송고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"성동구","url":"https://seb.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 성동구 옥수동 동호로5길","lat":null,"lng":null},{"type":"특성화고","name":"서울백영고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"강서구","url":"https://sby.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강서구 방화대로34길 13","lat":null,"lng":null},{"type":"특성화고","name":"서울신정고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"강서구","url":"https://shinjeong.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강서구 등촌로13아길 20","lat":null,"lng":null},{"type":"특성화고","name":"서울아이티고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"노원구","url":"https://seoulit.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 노원구 섬밭로 299","lat":null,"lng":null},{"type":"특성화고","name":"서울여자상업고등학교","gender":"여","region":"전국","dorm":"없음","gu":"관악구","url":"https://sys.sen.hs.kr","mode":"공통모집(2학년 분과)","addr":"서울특별시 관악구 봉천동 관악로 85","lat":null,"lng":null},{"type":"특성화고","name":"서울영상고등학교","gender":"공학","region":"전국","dorm":"요강 미기재","gu":"양천구","url":"http://www.youngsang.hs.kr","mode":"학과별 모집","addr":"서울특별시 양천구 목동로11길 46","lat":null,"lng":null},{"type":"특성화고","name":"서울웹툰애니메이션고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"서초구","url":"https://swas.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 서초구 방배동 과천대로 852-23","lat":null,"lng":null},{"type":"특성화고","name":"서울의료보건고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"중구","url":"http://smh.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 중구 만리재로37길 30","lat":null,"lng":null},{"type":"특성화고","name":"서울인공지능고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"송파구","url":"https://seoulai.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 송파구 양산로 21","lat":null,"lng":null},{"type":"특성화고","name":"서울정화고등학교","gender":"여","region":"전국","dorm":"없음","gu":"동대문구","url":"","mode":"학과별 모집","addr":"서울특별시 동대문구 홍릉로15길 50","lat":null,"lng":null},{"type":"특성화고","name":"서울컨벤션고등학교","gender":"공학","region":"서울·인천·경기","dorm":"없음","gu":"강동구","url":"https://seoul-chs.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강동구 고덕동 295-1","lat":null,"lng":null},{"type":"특성화고","name":"서울홍신고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"강서구","url":"https://seoul-hongshin.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강서구 내발산동 강서로45길 70","lat":null,"lng":null},{"type":"특성화고","name":"서일문화예술고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"종로구","url":"https://seoil.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 종로구 지봉로17길 49","lat":null,"lng":null},{"type":"특성화고","name":"선린인터넷고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"용산구","url":"https://sunrint.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 용산구 원효로97길 33-4","lat":null,"lng":null},{"type":"특성화고","name":"선일빅데이터고등학교","gender":"여","region":"전국","dorm":"없음","gu":"은평구","url":"https://bigdata.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 은평구 갈현로29길 27","lat":null,"lng":null},{"type":"특성화고","name":"선정국제관광고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"은평구","url":"https://sjt.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 은평구 서오릉로20길 19","lat":null,"lng":null},{"type":"특성화고","name":"성동공업고등학교","gender":"공학","region":"전국","dorm":"있음","gu":"중구","url":"http://sdth.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 중구 다산로 290","lat":null,"lng":null},{"type":"특성화고","name":"성동글로벌경영고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"중구","url":"http://sdglobal.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 중구 퇴계로 357","lat":null,"lng":null},{"type":"특성화고","name":"성암국제무역고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"강북구","url":"","mode":"학과별 모집","addr":"서울특별시 강북구 도봉로29길 52","lat":null,"lng":null},{"type":"특성화고","name":"세그루패션디자인고등학교","gender":"여","region":"전국","dorm":"없음","gu":"도봉구","url":"https://sfd.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 도봉구 시루봉로 53","lat":null,"lng":null},{"type":"특성화고","name":"세명컴퓨터고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"은평구","url":"https://smc.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 은평구 불광동 통일로92가길 33","lat":null,"lng":null},{"type":"특성화고","name":"송곡관광고등학교","gender":"공학","region":"서울·인천·경기","dorm":"없음","gu":"중랑구","url":"http://sgi.hs.kr","mode":"학과별 모집","addr":"서울특별시 중랑구 망우동 양원역로 67","lat":null,"lng":null},{"type":"특성화고","name":"신진과학기술고등학교","gender":"공학","region":"서울·인천·경기","dorm":"없음","gu":"은평구","url":"https://shinjin.hs.kr","mode":"학과별 모집","addr":"서울특별시 은평구 은평로6길 16","lat":null,"lng":null},{"type":"특성화고","name":"염광메디텍고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"노원구","url":"https://ykm.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 노원구 월계로45가길 9","lat":null,"lng":null},{"type":"특성화고","name":"영등포공업고등학교","gender":"남","region":"전국","dorm":"없음","gu":"강서구","url":"https://younggong.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강서구 허준로5길 15","lat":null,"lng":null},{"type":"특성화고","name":"영락의료과학고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"관악구","url":"https://youngnak-c.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 관악구 청룡16길 25","lat":null,"lng":null},{"type":"특성화고","name":"영신간호비즈니스고등학교","gender":"여","region":"전국","dorm":"없음","gu":"노원구","url":"https://youngshin.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 노원구 중계동 중계로16나길 13","lat":null,"lng":null},{"type":"특성화고","name":"예림디자인고등학교","gender":"여","region":"전국","dorm":"없음","gu":"구로구","url":"http://yerim.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 구로구 궁동 오리로21길","lat":null,"lng":null},{"type":"특성화고","name":"예일디자인고등학교","gender":"여","region":"전국","dorm":"없음","gu":"은평구","url":"https://yaledesign.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 은평구 연서로 117","lat":null,"lng":null},{"type":"특성화고","name":"용산철도고등학교","gender":"공학","region":"전국","dorm":"요강 미기재","gu":"용산구","url":"http://yongsan-th.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 용산구 한강로3가 서빙고로24길","lat":null,"lng":null},{"type":"특성화고","name":"유한공업고등학교","gender":"공학","region":"서울·인천·경기","dorm":"없음","gu":"구로구","url":"http://yuhan.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 구로구 경인로 8","lat":null,"lng":null},{"type":"특성화고","name":"은평메디텍고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"은평구","url":"https://eunpyeong.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 은평구 진관동 진관2로 57-57","lat":null,"lng":null},{"type":"특성화고","name":"이화여자대학교병설미디어고등학교","gender":"여","region":"전국","dorm":"없음","gu":"중랑구","url":"https://www.ewhamedia.sen.hs.kr","mode":"공통모집(2학년 분과)","addr":"서울특별시 중랑구 망우동 망우로73길 56","lat":null,"lng":null},{"type":"특성화고","name":"인덕과학기술고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"노원구","url":"http://induk.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 노원구 월계동 초안산로 12","lat":null,"lng":null},{"type":"특성화고","name":"일신여자상업고등학교","gender":"여","region":"전국","dorm":"없음","gu":"송파구","url":"","mode":"학과별 모집","addr":"서울특별시 송파구 송파동 송파대로38길 8","lat":null,"lng":null},{"type":"특성화고","name":"한강미디어고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"영등포구","url":"http://hangang-ech.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 영등포구 양평동4가 선유로55길 22","lat":null,"lng":null},{"type":"특성화고","name":"한세사이버보안고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"마포구","url":"https://hansei.sen.hs.kr/10497/subMenu.do","mode":"학과별 모집","addr":"서울특별시 마포구 마포대로11길 44-80","lat":null,"lng":null},{"type":"특성화고","name":"한양과학기술고등학교","gender":"공학","region":"전국","dorm":"없음","gu":"중구","url":"https://hanyang.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 중구 신당동 을지로 299","lat":null,"lng":null},{"type":"특성화고","name":"해성국제컨벤션고등학교","gender":"여","region":"전국","dorm":"없음","gu":"동대문구","url":"https://haesung.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 동대문구 전농동 전농로20길 31","lat":null,"lng":null},{"type":"특성화고","name":"홍익디자인고등학교","gender":"여","region":"서울·인천·경기","dorm":"없음","gu":"마포구","url":"https://hid.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 마포구 성미산로 111","lat":null,"lng":null},{"type":"마이스터고","name":"미림마이스터고등학교","gender":"공학","region":"전국(서울 외 지역 선발 비율 제한)","dorm":"요강 미기재","gu":"관악구","url":"http://www.e-mirim.hs.kr","mode":"학과별 모집","addr":"서울특별시 관악구 호암로 546","lat":null,"lng":null},{"type":"마이스터고","name":"서울도시과학기술고등학교","gender":"공학","region":"전국(서울 외 지역 선발 비율 제한)","dorm":"요강 미기재","gu":"성북구","url":"https://sust.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 성북구 종암동 종암로 196","lat":null,"lng":null},{"type":"마이스터고","name":"서울로봇고등학교","gender":"공학","region":"전국","dorm":"요강 미기재","gu":"강남구","url":"http://srobot.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강남구 일원동 광평로20길 63","lat":null,"lng":null},{"type":"마이스터고","name":"서울반도체고등학교","gender":"공학","region":"전국(서울 외 지역 선발 비율 제한)","dorm":"요강 미기재","gu":"동대문구","url":"https://ssc.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 동대문구 휘경동 겸재로 21","lat":null,"lng":null},{"type":"마이스터고","name":"수도전기공업고등학교","gender":"공학","region":"전국(서울 외 지역 선발 비율 제한)","dorm":"요강 미기재","gu":"강남구","url":"https://sudo.sen.hs.kr","mode":"학과별 모집","addr":"서울특별시 강남구 개포로 410","lat":null,"lng":null}],"depts":[{"school":"경기기계공업고등학교","dept":"로봇자동화과","cls":1,"quota":18,"common":false,"g":"G11","sub":""},{"school":"경기기계공업고등학교","dept":"하이텍융합기계과","cls":1,"quota":18,"common":false,"g":"G10","sub":""},{"school":"경기기계공업고등학교","dept":"메이커제품설계과","cls":1,"quota":18,"common":false,"g":"G10","sub":"G05"},{"school":"경기기계공업고등학교","dept":"항공드론과","cls":1,"quota":20,"common":false,"g":"G13","sub":"G11"},{"school":"경기기계공업고등학교","dept":"스마트설비과","cls":1,"quota":20,"common":false,"g":"G10","sub":"G08"},{"school":"경기기계공업고등학교","dept":"반도체재료과","cls":2,"quota":36,"common":false,"g":"G09","sub":"G16"},{"school":"경기기계공업고등학교","dept":"반도체메카트로닉스과","cls":2,"quota":36,"common":false,"g":"G09","sub":"G11"},{"school":"경기기계공업고등학교","dept":"전기시스템과","cls":2,"quota":36,"common":false,"g":"G08","sub":""},{"school":"경기기계공업고등학교","dept":"컴퓨터전자과","cls":2,"quota":36,"common":false,"g":"G09","sub":"G01"},{"school":"경기상업고등학교","dept":"경찰행정과","cls":2,"quota":40,"common":false,"g":"G27","sub":""},{"school":"경기상업고등학교","dept":"부사관행정과","cls":1,"quota":20,"common":false,"g":"G27","sub":""},{"school":"경기상업고등학교","dept":"공공행정과","cls":1,"quota":20,"common":false,"g":"G27","sub":"G18"},{"school":"경기상업고등학교","dept":"스포츠경영과","cls":2,"quota":40,"common":false,"g":"G26","sub":"G18"},{"school":"경기상업고등학교","dept":"뷰티디자인과","cls":2,"quota":40,"common":false,"g":"G23","sub":""},{"school":"경기상업고등학교","dept":"영화영상과","cls":1,"quota":20,"common":false,"g":"G04","sub":""},{"school":"경복비즈니스고등학교","dept":"관광서비스과","cls":2,"quota":36,"common":false,"g":"G20","sub":""},{"school":"경복비즈니스고등학교","dept":"스마트경영과","cls":1,"quota":20,"common":false,"g":"G18","sub":""},{"school":"경복비즈니스고등학교","dept":"AI융합콘텐츠과","cls":2,"quota":40,"common":false,"g":"G30","sub":"G01"},{"school":"경복비즈니스고등학교","dept":"콘텐츠디자인과","cls":2,"quota":40,"common":false,"g":"G05","sub":""},{"school":"고명외식고등학교","dept":"외식경영과","cls":2,"quota":40,"common":false,"g":"G21","sub":"G18"},{"school":"고명외식고등학교","dept":"디저트제과경영과","cls":2,"quota":40,"common":false,"g":"G22","sub":""},{"school":"고명외식고등학교","dept":"카페경영과","cls":2,"quota":40,"common":false,"g":"G22","sub":"G21"},{"school":"고명외식고등학교","dept":"국제관광과","cls":2,"quota":40,"common":false,"g":"G20","sub":""},{"school":"광신방송예술고등학교","dept":"미디어메이크업아티스트과","cls":1,"quota":20,"common":false,"g":"G23","sub":"G04"},{"school":"광신방송예술고등학교","dept":"연예엔터테인먼트과","cls":1,"quota":20,"common":false,"g":"G07","sub":""},{"school":"광신방송예술고등학교","dept":"방송영상과","cls":2,"quota":40,"common":false,"g":"G04","sub":""},{"school":"광신방송예술고등학교","dept":"만화영상과","cls":2,"quota":40,"common":false,"g":"G06","sub":"G04"},{"school":"광운인공지능고등학교","dept":"인공지능컴퓨팅과","cls":2,"quota":36,"common":false,"g":"G01","sub":""},{"school":"광운인공지능고등학교","dept":"AI로봇과","cls":2,"quota":36,"common":false,"g":"G11","sub":""},{"school":"광운인공지능고등학교","dept":"AI정보콘텐츠과","cls":2,"quota":36,"common":false,"g":"G01","sub":"G04"},{"school":"광운인공지능고등학교","dept":"인공지능전기과","cls":2,"quota":36,"common":false,"g":"G08","sub":"G01"},{"school":"광운인공지능고등학교","dept":"인공지능소프트웨어과","cls":2,"quota":36,"common":false,"g":"G01","sub":""},{"school":"단국대학교부속소프트웨어고등학교","dept":"인공지능소프트웨어과","cls":2,"quota":40,"common":true,"g":"G01","sub":""},{"school":"단국대학교부속소프트웨어고등학교","dept":"사물인터넷소프트웨어과","cls":2,"quota":40,"common":true,"g":"G01","sub":"G09"},{"school":"단국대학교부속소프트웨어고등학교","dept":"게임콘텐츠과","cls":1,"quota":20,"common":true,"g":"G03","sub":""},{"school":"대경생활과학고등학교","dept":"스마트경영과","cls":1,"quota":18,"common":false,"g":"G18","sub":""},{"school":"대경생활과학고등학교","dept":"핀테크경영과","cls":1,"quota":18,"common":false,"g":"G17","sub":"G01"},{"school":"대경생활과학고등학교","dept":"방송공연콘텐츠과","cls":2,"quota":40,"common":false,"g":"G07","sub":"G04"},{"school":"대경생활과학고등학교","dept":"캐릭터디자인과","cls":2,"quota":40,"common":false,"g":"G06","sub":"G05"},{"school":"대경생활과학고등학교","dept":"푸드조리디자인과","cls":2,"quota":40,"common":false,"g":"G21","sub":""},{"school":"대동세무고등학교","dept":"세무회계과","cls":4,"quota":80,"common":true,"g":"G17","sub":""},{"school":"대동세무고등학교","dept":"관세무역과","cls":4,"quota":80,"common":true,"g":"G18","sub":"G17"},{"school":"대일관광고등학교","dept":"호텔항공과","cls":2,"quota":40,"common":false,"g":"G20","sub":""},{"school":"대일관광고등학교","dept":"베이커리디저트과","cls":2,"quota":40,"common":false,"g":"G22","sub":""},{"school":"대일관광고등학교","dept":"외식산업과","cls":1,"quota":20,"common":false,"g":"G21","sub":""},{"school":"대일관광고등학교","dept":"뷰티아트과","cls":2,"quota":40,"common":false,"g":"G23","sub":""},{"school":"대진디자인고등학교","dept":"시각디자인과","cls":3,"quota":60,"common":false,"g":"G05","sub":""},{"school":"대진디자인고등학교","dept":"인테리어디자인과","cls":3,"quota":60,"common":false,"g":"G14","sub":""},{"school":"대진디자인고등학교","dept":"메타버스디자인과","cls":3,"quota":60,"common":false,"g":"G05","sub":"G03"},{"school":"덕일전자공업고등학교","dept":"전자시스템제어과","cls":1,"quota":18,"common":false,"g":"G09","sub":"G11"},{"school":"덕일전자공업고등학교","dept":"전자과","cls":1,"quota":18,"common":false,"g":"G09","sub":""},{"school":"덕일전자공업고등학교","dept":"로봇드론과","cls":2,"quota":36,"common":false,"g":"G11","sub":"G13"},{"school":"동명생활경영고등학교","dept":"뷰티아트과","cls":2,"quota":40,"common":false,"g":"G23","sub":""},{"school":"동명생활경영고등학교","dept":"뷰티메디컬케어과","cls":1,"quota":18,"common":false,"g":"G23","sub":"G24"},{"school":"동명생활경영고등학교","dept":"영유아보육과","cls":2,"quota":36,"common":false,"g":"G29","sub":""},{"school":"리라아트고등학교","dept":"영상음악콘텐츠과","cls":4,"quota":80,"common":false,"g":"G07","sub":"G04"},{"school":"리라아트고등학교","dept":"건강과학과","cls":2,"quota":40,"common":false,"g":"G24","sub":""},{"school":"미래산업과학고등학교","dept":"피지컬AI과","cls":2,"quota":36,"common":false,"g":"G11","sub":"G01"},{"school":"미래산업과학고등학교","dept":"컴퓨터미디어과","cls":2,"quota":40,"common":false,"g":"G01","sub":"G04"},{"school":"미래산업과학고등학교","dept":"인공지능콘텐츠과","cls":2,"quota":40,"common":false,"g":"G01","sub":"G04"},{"school":"미래산업과학고등학교","dept":"웹툰디자인과","cls":2,"quota":40,"common":false,"g":"G06","sub":""},{"school":"상일미디어고등학교","dept":"인공지능소프트웨어과","cls":2,"quota":36,"common":false,"g":"G01","sub":""},{"school":"상일미디어고등학교","dept":"사물인터넷과","cls":2,"quota":36,"common":false,"g":"G09","sub":"G01"},{"school":"상일미디어고등학교","dept":"디자인과","cls":2,"quota":36,"common":false,"g":"G05","sub":""},{"school":"상일미디어고등학교","dept":"디지털만화영상과","cls":2,"quota":40,"common":false,"g":"G06","sub":"G04"},{"school":"상일미디어고등학교","dept":"바이오푸드과","cls":2,"quota":40,"common":false,"g":"G22","sub":"G16"},{"school":"서서울생활과학고등학교","dept":"실용음악과","cls":1,"quota":20,"common":false,"g":"G07","sub":""},{"school":"서서울생활과학고등학교","dept":"생활체육과","cls":1,"quota":20,"common":false,"g":"G26","sub":""},{"school":"서서울생활과학고등학교","dept":"국제뷰티아트과","cls":2,"quota":40,"common":false,"g":"G23","sub":""},{"school":"서서울생활과학고등학교","dept":"국제조리과학과","cls":2,"quota":40,"common":false,"g":"G21","sub":""},{"school":"서서울생활과학고등학교","dept":"제과제빵과","cls":1,"quota":20,"common":false,"g":"G22","sub":""},{"school":"서울공업고등학교","dept":"스마트기계과","cls":1,"quota":20,"common":false,"g":"G10","sub":""},{"school":"서울공업고등학교","dept":"스마트용접설비과","cls":1,"quota":20,"common":false,"g":"G10","sub":""},{"school":"서울공업고등학교","dept":"미래자동차과","cls":2,"quota":40,"common":false,"g":"G12","sub":""},{"school":"서울공업고등학교","dept":"시스템자동화과","cls":1,"quota":18,"common":false,"g":"G11","sub":""},{"school":"서울공업고등학교","dept":"친환경에너지전기과","cls":1,"quota":20,"common":false,"g":"G08","sub":""},{"school":"서울공업고등학교","dept":"전자과","cls":1,"quota":20,"common":false,"g":"G09","sub":""},{"school":"서울공업고등학교","dept":"신재생에너지과","cls":1,"quota":18,"common":false,"g":"G08","sub":""},{"school":"서울공업고등학교","dept":"스마트건축토목과","cls":2,"quota":36,"common":false,"g":"G15","sub":"G14"},{"school":"서울공업고등학교","dept":"바이오화공과","cls":1,"quota":20,"common":false,"g":"G16","sub":""},{"school":"서울공업고등학교","dept":"섬유패션디자인과","cls":1,"quota":20,"common":false,"g":"G25","sub":""},{"school":"서울공업고등학교","dept":"그래픽아트과","cls":1,"quota":18,"common":false,"g":"G05","sub":""},{"school":"서울공업고등학교","dept":"신소재세라믹과","cls":1,"quota":20,"common":false,"g":"G16","sub":"G10"},{"school":"서울관광고등학교","dept":"카페경영과","cls":2,"quota":40,"common":false,"g":"G22","sub":"G21"},{"school":"서울관광고등학교","dept":"관광서비스과","cls":2,"quota":40,"common":false,"g":"G20","sub":""},{"school":"서울관광고등학교","dept":"외식조리과","cls":4,"quota":80,"common":false,"g":"G21","sub":""},{"school":"서울금융고등학교","dept":"금융과","cls":1,"quota":18,"common":false,"g":"G17","sub":""},{"school":"서울금융고등학교","dept":"스타트업과","cls":1,"quota":18,"common":false,"g":"G18","sub":"G19"},{"school":"서울금융고등학교","dept":"브랜딩디자인과","cls":1,"quota":18,"common":false,"g":"G05","sub":""},{"school":"서울금융고등학교","dept":"게임디자인과","cls":1,"quota":20,"common":false,"g":"G03","sub":"G05"},{"school":"서울금융고등학교","dept":"반려동물과","cls":2,"quota":40,"common":false,"g":"G28","sub":""},{"school":"서울금융고등학교","dept":"디저트경영과","cls":1,"quota":18,"common":false,"g":"G22","sub":""},{"school":"서울동구고등학교","dept":"스마트금융경영과","cls":2,"quota":40,"common":false,"g":"G17","sub":"G18"},{"school":"서울동구고등학교","dept":"디지털콘텐츠과","cls":2,"quota":36,"common":false,"g":"G30","sub":"G05"},{"school":"서울동구고등학교","dept":"디자인과","cls":2,"quota":36,"common":false,"g":"G05","sub":""},{"school":"서울동구고등학교","dept":"공연예술과","cls":1,"quota":20,"common":false,"g":"G07","sub":""},{"school":"서울동산고등학교","dept":"보건간호과","cls":2,"quota":40,"common":false,"g":"G24","sub":""},{"school":"서울동산고등학교","dept":"영유아보육과","cls":2,"quota":40,"common":false,"g":"G29","sub":""},{"school":"서울동산고등학교","dept":"뷰티아트과","cls":4,"quota":80,"common":false,"g":"G23","sub":""},{"school":"서울동산고등학교","dept":"외식조리과","cls":3,"quota":60,"common":false,"g":"G21","sub":""},{"school":"서울동산고등학교","dept":"음악영상콘텐츠과","cls":2,"quota":40,"common":false,"g":"G07","sub":"G04"},{"school":"서울동산고등학교","dept":"스포츠경영과","cls":2,"quota":40,"common":false,"g":"G26","sub":"G18"},{"school":"서울디자인고등학교","dept":"패션액세서리디자인과","cls":1,"quota":20,"common":false,"g":"G25","sub":""},{"school":"서울디자인고등학교","dept":"웹툰콘텐츠과","cls":1,"quota":20,"common":false,"g":"G06","sub":""},{"school":"서울디자인고등학교","dept":"3D건축인테리어과","cls":2,"quota":40,"common":false,"g":"G14","sub":""},{"school":"서울디자인고등학교","dept":"AI아트크리에이티브과","cls":2,"quota":36,"common":false,"g":"G05","sub":"G01"},{"school":"서울디자인고등학교","dept":"스마트패션디자인과","cls":2,"quota":40,"common":false,"g":"G25","sub":""},{"school":"서울디자인고등학교","dept":"영상디자인과","cls":1,"quota":20,"common":false,"g":"G04","sub":"G05"},{"school":"서울디자인고등학교","dept":"푸드스타일디자인과","cls":4,"quota":80,"common":false,"g":"G21","sub":"G05"},{"school":"서울디자인고등학교","dept":"K-POP뮤직디자인과","cls":2,"quota":36,"common":false,"g":"G07","sub":""},{"school":"서울디지털콘텐츠고등학교","dept":"건축과","cls":1,"quota":18,"common":false,"g":"G14","sub":""},{"school":"서울디지털콘텐츠고등학교","dept":"바이오환경에너지과","cls":1,"quota":18,"common":false,"g":"G16","sub":"G15"},{"school":"서울디지털콘텐츠고등학교","dept":"스마트정보통신과","cls":1,"quota":18,"common":false,"g":"G02","sub":""},{"school":"서울디지털콘텐츠고등학교","dept":"VR콘텐츠디자인과","cls":1,"quota":20,"common":false,"g":"G03","sub":"G05"},{"school":"서울디지털콘텐츠고등학교","dept":"영상콘텐츠디자인과","cls":1,"quota":20,"common":false,"g":"G04","sub":"G05"},{"school":"서울디지텍고등학교","dept":"게임개발과","cls":2,"quota":40,"common":true,"g":"G03","sub":""},{"school":"서울디지텍고등학교","dept":"인공지능게임과","cls":2,"quota":40,"common":true,"g":"G03","sub":""},{"school":"서울매그넷고등학교","dept":"시각디자인과","cls":1,"quota":20,"common":false,"g":"G05","sub":""},{"school":"서울매그넷고등학교","dept":"시각애니메이션과","cls":2,"quota":40,"common":false,"g":"G06","sub":"G05"},{"school":"서울매그넷고등학교","dept":"베이커리과","cls":2,"quota":40,"common":false,"g":"G22","sub":""},{"school":"서울매그넷고등학교","dept":"카페디저트과","cls":1,"quota":20,"common":false,"g":"G22","sub":""},{"school":"서울문화고등학교","dept":"경영금융과","cls":1,"quota":18,"common":false,"g":"G17","sub":"G18"},{"school":"서울문화고등학교","dept":"광고마케팅과","cls":1,"quota":18,"common":false,"g":"G19","sub":""},{"school":"서울문화고등학교","dept":"엔터테인먼트과","cls":1,"quota":20,"common":false,"g":"G07","sub":"G30"},{"school":"서울문화고등학교","dept":"영상크리에이터과","cls":1,"quota":18,"common":false,"g":"G30","sub":"G04"},{"school":"서울문화고등학교","dept":"스마트소프트웨어과","cls":1,"quota":18,"common":false,"g":"G01","sub":""},{"school":"서울문화고등학교","dept":"콘텐츠디자인과","cls":1,"quota":18,"common":false,"g":"G05","sub":""},{"school":"서울문화고등학교","dept":"영상애니메이션디자인과","cls":1,"quota":20,"common":false,"g":"G06","sub":"G04"},{"school":"서울방송고등학교","dept":"방송영상과","cls":2,"quota":40,"common":false,"g":"G04","sub":""},{"school":"서울방송고등학교","dept":"미디어콘텐츠과","cls":2,"quota":40,"common":false,"g":"G30","sub":"G04"},{"school":"서울방송고등학교","dept":"방송시스템과","cls":2,"quota":40,"common":false,"g":"G04","sub":"G09"},{"school":"서울방송고등학교","dept":"방송연예공연과","cls":1,"quota":20,"common":false,"g":"G07","sub":"G04"},{"school":"서울백영고등학교","dept":"항공비즈니스과","cls":1,"quota":18,"common":false,"g":"G20","sub":""},{"school":"서울백영고등학교","dept":"방송영상과","cls":1,"quota":18,"common":false,"g":"G04","sub":""},{"school":"서울백영고등학교","dept":"미디어콘텐츠과","cls":1,"quota":18,"common":false,"g":"G30","sub":"G04"},{"school":"서울백영고등학교","dept":"웹툰제작과","cls":1,"quota":20,"common":false,"g":"G06","sub":""},{"school":"서울백영고등학교","dept":"국제조리과","cls":1,"quota":20,"common":false,"g":"G21","sub":""},{"school":"서울백영고등학교","dept":"디저트제과제빵과","cls":2,"quota":40,"common":false,"g":"G22","sub":""},{"school":"서울신정고등학교","dept":"웹크리에이터과","cls":1,"quota":18,"common":false,"g":"G30","sub":"G05"},{"school":"서울신정고등학교","dept":"생활체육과","cls":2,"quota":36,"common":false,"g":"G26","sub":""},{"school":"서울신정고등학교","dept":"푸드조리과","cls":2,"quota":36,"common":false,"g":"G21","sub":""},{"school":"서울신정고등학교","dept":"베이커리과","cls":2,"quota":36,"common":false,"g":"G22","sub":""},{"school":"서울아이티고등학교","dept":"영상디자인과","cls":2,"quota":36,"common":false,"g":"G04","sub":"G05"},{"school":"서울아이티고등학교","dept":"지능형사이버보안과","cls":2,"quota":40,"common":false,"g":"G02","sub":""},{"school":"서울아이티고등학교","dept":"애니메이션디자인과","cls":2,"quota":36,"common":false,"g":"G06","sub":""},{"school":"서울아이티고등학교","dept":"스마트웹콘텐츠과","cls":1,"quota":20,"common":false,"g":"G05","sub":"G01"},{"school":"서울아이티고등학교","dept":"3D모델링과","cls":2,"quota":36,"common":false,"g":"G05","sub":"G03"},{"school":"서울아이티고등학교","dept":"스마트융합스포츠과","cls":1,"quota":20,"common":false,"g":"G26","sub":""},{"school":"서울여자상업고등학교","dept":"금융투자과","cls":4,"quota":72,"common":true,"g":"G17","sub":""},{"school":"서울여자상업고등학교","dept":"글로벌경영과","cls":4,"quota":72,"common":true,"g":"G18","sub":""},{"school":"서울영상고등학교","dept":"영상콘텐츠과","cls":2,"quota":40,"common":false,"g":"G04","sub":""},{"school":"서울영상고등학교","dept":"영상미디어과","cls":2,"quota":40,"common":false,"g":"G04","sub":""},{"school":"서울영상고등학교","dept":"영상프로듀스과","cls":2,"quota":40,"common":false,"g":"G04","sub":""},{"school":"서울웹툰애니메이션고등학교","dept":"웹툰·애니메이션계열","cls":4,"quota":80,"common":false,"g":"G06","sub":""},{"school":"서울웹툰애니메이션고등학교","dept":"게임콘텐츠과","cls":1,"quota":20,"common":false,"g":"G03","sub":""},{"school":"서울의료보건고등학교","dept":"보건간호과","cls":5,"quota":100,"common":false,"g":"G24","sub":""},{"school":"서울인공지능고등학교","dept":"AI컴퓨터과","cls":2,"quota":36,"common":false,"g":"G01","sub":""},{"school":"서울인공지능고등학교","dept":"AI로봇과","cls":1,"quota":18,"common":false,"g":"G11","sub":""},{"school":"서울인공지능고등학교","dept":"전기에너지과","cls":2,"quota":36,"common":false,"g":"G08","sub":""},{"school":"서울인공지능고등학교","dept":"AI콘텐츠디자인과","cls":2,"quota":40,"common":false,"g":"G05","sub":"G01"},{"school":"서울정화고등학교","dept":"부사관과","cls":2,"quota":36,"common":false,"g":"G27","sub":""},{"school":"서울정화고등학교","dept":"방송연예콘텐츠과","cls":1,"quota":20,"common":false,"g":"G07","sub":"G04"},{"school":"서울정화고등학교","dept":"카페베이커리과","cls":1,"quota":20,"common":false,"g":"G22","sub":""},{"school":"서울정화고등학교","dept":"뷰티디자인과","cls":2,"quota":40,"common":false,"g":"G23","sub":""},{"school":"서울컨벤션고등학교","dept":"미디어사운드과","cls":2,"quota":40,"common":false,"g":"G04","sub":"G07"},{"school":"서울컨벤션고등학교","dept":"베이커리카페과","cls":2,"quota":40,"common":false,"g":"G22","sub":""},{"school":"서울컨벤션고등학교","dept":"컨벤션외식조리과","cls":2,"quota":40,"common":false,"g":"G21","sub":"G20"},{"school":"서울컨벤션고등학교","dept":"관광레저과","cls":4,"quota":80,"common":false,"g":"G20","sub":""},{"school":"서울홍신고등학교","dept":"간호과","cls":2,"quota":36,"common":false,"g":"G24","sub":""},{"school":"서울홍신고등학교","dept":"콘텐츠크리에이터과","cls":1,"quota":20,"common":false,"g":"G30","sub":""},{"school":"서울홍신고등학교","dept":"뷰티아트과","cls":2,"quota":40,"common":false,"g":"G23","sub":""},{"school":"서일문화예술고등학교","dept":"외식베이커리과","cls":3,"quota":60,"common":false,"g":"G22","sub":""},{"school":"서일문화예술고등학교","dept":"뮤지컬연기과","cls":2,"quota":40,"common":false,"g":"G07","sub":""},{"school":"선린인터넷고등학교","dept":"정보보호과","cls":3,"quota":60,"common":false,"g":"G02","sub":""},{"school":"선린인터넷고등학교","dept":"소프트웨어과","cls":3,"quota":60,"common":false,"g":"G01","sub":""},{"school":"선린인터넷고등학교","dept":"IT경영과","cls":2,"quota":40,"common":false,"g":"G18","sub":"G01"},{"school":"선린인터넷고등학교","dept":"콘텐츠디자인과","cls":2,"quota":40,"common":false,"g":"G05","sub":""},{"school":"선일빅데이터고등학교","dept":"웹툰일러스트과","cls":2,"quota":40,"common":false,"g":"G06","sub":""},{"school":"선일빅데이터고등학교","dept":"방송미디어과","cls":2,"quota":36,"common":false,"g":"G04","sub":""},{"school":"선일빅데이터고등학교","dept":"빅데이터마케팅과","cls":2,"quota":36,"common":false,"g":"G19","sub":"G01"},{"school":"선일빅데이터고등학교","dept":"쇼핑라이브과","cls":1,"quota":18,"common":false,"g":"G19","sub":"G30"},{"school":"선정국제관광고등학교","dept":"호텔항공관광과","cls":3,"quota":54,"common":false,"g":"G20","sub":""},{"school":"선정국제관광고등학교","dept":"관광콘텐츠과","cls":1,"quota":18,"common":false,"g":"G20","sub":"G04"},{"school":"선정국제관광고등학교","dept":"간호과","cls":1,"quota":20,"common":false,"g":"G24","sub":""},{"school":"성동공업고등학교","dept":"소방안전기계과","cls":2,"quota":40,"common":false,"g":"G27","sub":"G10"},{"school":"성동공업고등학교","dept":"소방시설관리과","cls":2,"quota":40,"common":false,"g":"G27","sub":""},{"school":"성동공업고등학교","dept":"소방전기과","cls":2,"quota":40,"common":false,"g":"G27","sub":"G08"},{"school":"성동공업고등학교","dept":"소방모빌리티과","cls":1,"quota":20,"common":false,"g":"G27","sub":"G12"},{"school":"성동공업고등학교","dept":"도시건축디자인과","cls":1,"quota":20,"common":false,"g":"G14","sub":"G15"},{"school":"성동공업고등학교","dept":"패션주얼리디자인과","cls":1,"quota":20,"common":false,"g":"G25","sub":""},{"school":"성동글로벌경영고등학교","dept":"반려동물케어과","cls":2,"quota":40,"common":false,"g":"G28","sub":""},{"school":"성동글로벌경영고등학교","dept":"세무행정과","cls":1,"quota":20,"common":false,"g":"G17","sub":"G18"},{"school":"성동글로벌경영고등학교","dept":"문화콘텐츠디자인과","cls":2,"quota":40,"common":false,"g":"G05","sub":""},{"school":"성동글로벌경영고등학교","dept":"패션디자인과","cls":2,"quota":40,"common":false,"g":"G25","sub":""},{"school":"성암국제무역고등학교","dept":"미주무역과","cls":2,"quota":36,"common":false,"g":"G18","sub":""},{"school":"성암국제무역고등학교","dept":"중국무역과","cls":1,"quota":20,"common":false,"g":"G18","sub":""},{"school":"성암국제무역고등학교","dept":"일본무역과","cls":2,"quota":40,"common":false,"g":"G18","sub":""},{"school":"성암국제무역고등학교","dept":"국제문화콘텐츠과","cls":2,"quota":36,"common":false,"g":"G19","sub":"G04"},{"school":"세그루패션디자인고등학교","dept":"뷰티패션과","cls":2,"quota":40,"common":false,"g":"G23","sub":"G25"},{"school":"세그루패션디자인고등학교","dept":"미디어디자인과","cls":2,"quota":36,"common":false,"g":"G04","sub":"G05"},{"school":"세그루패션디자인고등학교","dept":"패션제품디자인과","cls":2,"quota":40,"common":false,"g":"G25","sub":""},{"school":"세그루패션디자인고등학교","dept":"의상패션과","cls":2,"quota":36,"common":false,"g":"G25","sub":""},{"school":"세명컴퓨터고등학교","dept":"스마트보안솔루션과","cls":2,"quota":36,"common":false,"g":"G02","sub":""},{"school":"세명컴퓨터고등학교","dept":"모빌리티메이커과","cls":2,"quota":36,"common":false,"g":"G12","sub":"G11"},{"school":"세명컴퓨터고등학교","dept":"인공지능소프트웨어과","cls":1,"quota":18,"common":false,"g":"G01","sub":""},{"school":"세명컴퓨터고등학교","dept":"게임소프트웨어과","cls":1,"quota":18,"common":false,"g":"G03","sub":""},{"school":"세명컴퓨터고등학교","dept":"AI미디어테크과","cls":2,"quota":36,"common":false,"g":"G04","sub":"G30"},{"school":"세명컴퓨터고등학교","dept":"AI스포츠테크과","cls":1,"quota":18,"common":false,"g":"G26","sub":"G01"},{"school":"송곡관광고등학교","dept":"조리과학과","cls":2,"quota":40,"common":false,"g":"G21","sub":""},{"school":"송곡관광고등학교","dept":"카페디저트과","cls":2,"quota":40,"common":false,"g":"G22","sub":""},{"school":"송곡관광고등학교","dept":"호텔관광과","cls":1,"quota":20,"common":false,"g":"G20","sub":""},{"school":"신진과학기술고등학교","dept":"미래자동차과","cls":2,"quota":40,"common":false,"g":"G12","sub":""},{"school":"신진과학기술고등학교","dept":"스마트건설과","cls":2,"quota":40,"common":false,"g":"G15","sub":""},{"school":"신진과학기술고등학교","dept":"인공지능자동화과","cls":1,"quota":20,"common":false,"g":"G11","sub":"G01"},{"school":"신진과학기술고등학교","dept":"호텔조리과","cls":2,"quota":40,"common":false,"g":"G21","sub":""},{"school":"신진과학기술고등학교","dept":"호텔디저트경영과","cls":1,"quota":20,"common":false,"g":"G22","sub":""},{"school":"염광메디텍고등학교","dept":"메디컬뷰티과","cls":1,"quota":20,"common":false,"g":"G23","sub":"G24"},{"school":"염광메디텍고등학교","dept":"바이오코스메틱과","cls":1,"quota":20,"common":false,"g":"G16","sub":"G23"},{"school":"염광메디텍고등학교","dept":"보건간호과","cls":3,"quota":60,"common":false,"g":"G24","sub":""},{"school":"영등포공업고등학교","dept":"공연무대디자인과","cls":2,"quota":40,"common":false,"g":"G07","sub":"G14"},{"school":"영등포공업고등학교","dept":"스마트전기과","cls":2,"quota":40,"common":false,"g":"G08","sub":""},{"school":"영등포공업고등학교","dept":"반도체시스템과","cls":1,"quota":20,"common":false,"g":"G09","sub":""},{"school":"영등포공업고등학교","dept":"스포츠과학시설과","cls":2,"quota":40,"common":false,"g":"G26","sub":"G14"},{"school":"영락의료과학고등학교","dept":"디지털 의료IT과","cls":1,"quota":18,"common":false,"g":"G24","sub":"G01"},{"school":"영락의료과학고등학교","dept":"건강과학과","cls":1,"quota":20,"common":false,"g":"G24","sub":""},{"school":"영락의료과학고등학교","dept":"의료비즈니스과","cls":1,"quota":20,"common":false,"g":"G24","sub":"G18"},{"school":"영락의료과학고등학교","dept":"의료미용과","cls":1,"quota":20,"common":false,"g":"G23","sub":"G24"},{"school":"영락의료과학고등학교","dept":"보건간호과","cls":2,"quota":40,"common":false,"g":"G24","sub":""},{"school":"영신간호비즈니스고등학교","dept":"스마트의료간호과","cls":3,"quota":60,"common":false,"g":"G24","sub":""},{"school":"영신간호비즈니스고등학교","dept":"보건뷰티과","cls":2,"quota":40,"common":false,"g":"G23","sub":"G24"},{"school":"영신간호비즈니스고등학교","dept":"웰빙베이커리과","cls":2,"quota":40,"common":false,"g":"G22","sub":""},{"school":"영신간호비즈니스고등학교","dept":"스마트영상디자인과","cls":1,"quota":20,"common":false,"g":"G04","sub":"G05"},{"school":"예림디자인고등학교","dept":"시각디자인과","cls":2,"quota":40,"common":false,"g":"G05","sub":""},{"school":"예림디자인고등학교","dept":"콘텐츠디자인과","cls":1,"quota":20,"common":false,"g":"G05","sub":""},{"school":"예림디자인고등학교","dept":"게임그래픽디자인과","cls":1,"quota":20,"common":false,"g":"G03","sub":"G05"},{"school":"예림디자인고등학교","dept":"만화애니메이션과","cls":1,"quota":20,"common":false,"g":"G06","sub":""},{"school":"예림디자인고등학교","dept":"패션스타일리스트과","cls":1,"quota":20,"common":false,"g":"G25","sub":"G23"},{"school":"예일디자인고등학교","dept":"웹콘텐츠디자인과","cls":3,"quota":60,"common":false,"g":"G05","sub":""},{"school":"예일디자인고등학교","dept":"패션ㆍ스타일과","cls":1,"quota":18,"common":false,"g":"G25","sub":""},{"school":"예일디자인고등학교","dept":"웹툰ㆍ애니메이션과","cls":2,"quota":36,"common":false,"g":"G06","sub":""},{"school":"예일디자인고등학교","dept":"시각디자인과","cls":2,"quota":40,"common":false,"g":"G05","sub":""},{"school":"용산철도고등학교","dept":"철도운전기계‧차량 계열","cls":4,"quota":80,"common":false,"g":"G13","sub":""},{"school":"용산철도고등학교","dept":"철도전기신호과","cls":1,"quota":20,"common":false,"g":"G13","sub":"G08"},{"school":"용산철도고등학교","dept":"철도전자통신과","cls":1,"quota":20,"common":false,"g":"G13","sub":"G09"},{"school":"용산철도고등학교","dept":"철도건설과","cls":1,"quota":20,"common":false,"g":"G13","sub":"G15"},{"school":"용산철도고등학교","dept":"철도운영사무과","cls":1,"quota":20,"common":false,"g":"G13","sub":"G18"},{"school":"유한공업고등학교","dept":"스마트제어과","cls":2,"quota":40,"common":false,"g":"G11","sub":"G09"},{"school":"유한공업고등학교","dept":"자동화시스템과","cls":2,"quota":40,"common":false,"g":"G11","sub":""},{"school":"유한공업고등학교","dept":"로봇전기과","cls":2,"quota":40,"common":false,"g":"G11","sub":"G08"},{"school":"유한공업고등학교","dept":"건축디자인과","cls":2,"quota":40,"common":false,"g":"G14","sub":""},{"school":"은평메디텍고등학교","dept":"e스포츠과","cls":2,"quota":36,"common":false,"g":"G26","sub":"G03"},{"school":"은평메디텍고등학교","dept":"스마트AI과","cls":1,"quota":18,"common":false,"g":"G01","sub":""},{"school":"은평메디텍고등학교","dept":"조리디저트과","cls":2,"quota":36,"common":false,"g":"G21","sub":"G22"},{"school":"은평메디텍고등학교","dept":"보건간호과","cls":2,"quota":40,"common":false,"g":"G24","sub":""},{"school":"이화여자대학교병설미디어고등학교","dept":"국제경영과","cls":3,"quota":54,"common":true,"g":"G18","sub":""},{"school":"이화여자대학교병설미디어고등학교","dept":"영상콘텐츠과","cls":2,"quota":36,"common":true,"g":"G04","sub":""},{"school":"이화여자대학교병설미디어고등학교","dept":"디자인과","cls":3,"quota":54,"common":true,"g":"G05","sub":""},{"school":"인덕과학기술고등학교","dept":"에너지관리시스템과","cls":2,"quota":40,"common":false,"g":"G08","sub":""},{"school":"인덕과학기술고등학교","dept":"도시공간디자인과","cls":1,"quota":20,"common":false,"g":"G14","sub":"G15"},{"school":"인덕과학기술고등학교","dept":"스마트모빌리티과","cls":2,"quota":40,"common":false,"g":"G12","sub":""},{"school":"인덕과학기술고등학교","dept":"캐릭터디자인과","cls":3,"quota":60,"common":false,"g":"G06","sub":"G05"},{"school":"인덕과학기술고등학교","dept":"인테리어디자인과","cls":2,"quota":40,"common":false,"g":"G14","sub":""},{"school":"일신여자상업고등학교","dept":"금융정보과","cls":2,"quota":36,"common":false,"g":"G17","sub":""},{"school":"일신여자상업고등학교","dept":"회계정보과","cls":2,"quota":36,"common":false,"g":"G17","sub":""},{"school":"일신여자상업고등학교","dept":"디자인콘텐츠과","cls":2,"quota":40,"common":false,"g":"G05","sub":""},{"school":"일신여자상업고등학교","dept":"스마트펫경영과","cls":2,"quota":40,"common":false,"g":"G28","sub":"G18"},{"school":"한강미디어고등학교","dept":"방송미디어과","cls":2,"quota":40,"common":false,"g":"G04","sub":""},{"school":"한강미디어고등학교","dept":"크리에이티브디자인과","cls":2,"quota":36,"common":false,"g":"G05","sub":""},{"school":"한강미디어고등학교","dept":"사진영상과","cls":2,"quota":40,"common":false,"g":"G04","sub":""},{"school":"한강미디어고등학교","dept":"웹미디어콘텐츠과","cls":2,"quota":40,"common":false,"g":"G30","sub":"G05"},{"school":"한세사이버보안고등학교","dept":"지능형소프트웨어과","cls":1,"quota":18,"common":false,"g":"G01","sub":""},{"school":"한세사이버보안고등학교","dept":"게임디자인과","cls":1,"quota":18,"common":false,"g":"G03","sub":"G05"},{"school":"한세사이버보안고등학교","dept":"해킹보안과","cls":2,"quota":36,"common":false,"g":"G02","sub":""},{"school":"한양과학기술고등학교","dept":"스마트건설정보과","cls":2,"quota":40,"common":false,"g":"G15","sub":"G01"},{"school":"한양과학기술고등학교","dept":"디지털건축과","cls":2,"quota":40,"common":false,"g":"G14","sub":""},{"school":"한양과학기술고등학교","dept":"스마트융합기계과","cls":2,"quota":40,"common":false,"g":"G10","sub":""},{"school":"한양과학기술고등학교","dept":"스마트전자과","cls":2,"quota":40,"common":false,"g":"G09","sub":""},{"school":"한양과학기술고등학교","dept":"친환경자동차과","cls":2,"quota":40,"common":false,"g":"G12","sub":""},{"school":"해성국제컨벤션고등학교","dept":"컨벤션경영과","cls":2,"quota":36,"common":false,"g":"G20","sub":"G18"},{"school":"해성국제컨벤션고등학교","dept":"항공호텔과","cls":2,"quota":36,"common":false,"g":"G20","sub":""},{"school":"해성국제컨벤션고등학교","dept":"방송공연과","cls":2,"quota":40,"common":false,"g":"G07","sub":"G04"},{"school":"홍익디자인고등학교","dept":"시각디자인과","cls":3,"quota":60,"common":false,"g":"G05","sub":""},{"school":"홍익디자인고등학교","dept":"영상애니메이션과","cls":2,"quota":40,"common":false,"g":"G06","sub":"G04"},{"school":"미림마이스터고등학교","dept":"지능형소프트웨어과","cls":4,"quota":72,"common":false,"g":"G01","sub":""},{"school":"미림마이스터고등학교","dept":"지능형디자인과","cls":2,"quota":36,"common":false,"g":"G05","sub":""},{"school":"서울도시과학기술고등학교","dept":"해외플랜트산업설비과","cls":2,"quota":36,"common":false,"g":"G15","sub":"G10"},{"school":"서울도시과학기술고등학교","dept":"에코공정플랜트과","cls":1,"quota":18,"common":false,"g":"G15","sub":"G16"},{"school":"서울도시과학기술고등학교","dept":"해외건설전기통신과","cls":2,"quota":36,"common":false,"g":"G08","sub":"G15"},{"school":"서울도시과학기술고등학교","dept":"해외시설물건설과","cls":2,"quota":36,"common":false,"g":"G15","sub":""},{"school":"서울로봇고등학교","dept":"로봇설계과","cls":2,"quota":36,"common":false,"g":"G11","sub":""},{"school":"서울로봇고등학교","dept":"로봇제어과","cls":2,"quota":36,"common":false,"g":"G11","sub":""},{"school":"서울로봇고등학교","dept":"로봇소프트웨어과","cls":2,"quota":36,"common":false,"g":"G11","sub":"G01"},{"school":"서울로봇고등학교","dept":"로봇정보통신과","cls":1,"quota":18,"common":false,"g":"G11","sub":"G02"},{"school":"서울반도체고등학교","dept":"반도체장비과","cls":2,"quota":32,"common":false,"g":"G09","sub":"G11"},{"school":"서울반도체고등학교","dept":"반도체제조과","cls":2,"quota":32,"common":false,"g":"G09","sub":""},{"school":"수도전기공업고등학교","dept":"전기에너지과","cls":4,"quota":72,"common":false,"g":"G08","sub":""},{"school":"수도전기공업고등학교","dept":"에너지전자제어과","cls":2,"quota":36,"common":false,"g":"G09","sub":"G08"},{"school":"수도전기공업고등학교","dept":"에너지기계과","cls":2,"quota":36,"common":false,"g":"G10","sub":"G08"},{"school":"수도전기공업고등학교","dept":"에너지정보통신과","cls":2,"quota":36,"common":false,"g":"G02","sub":"G08"}]};
+const ENV = "file";
+
+/* ---------- settings (매칭규칙 시트 기준) ---------- */
+const CFG = { W:0.30, base:{h:0.30,c:0.20,s:0.15}, hi:65, lo:35, low:50, mainW:0.8, subW:0.2 };
+
+/* ---------- questions ---------- */
+const S1 = [
+ {id:"S1-01",t:"교과서를 읽고 문제를 푸는 것보다, 직접 만들고 실습하며 배우는 게 더 잘 맞아요.",dir:1,w:3},
+ {id:"S1-02",t:"개념을 깊이 이해하고 시험 문제를 풀어내는 공부가 재미있어요.",dir:-1,w:2},
+ {id:"S1-03",t:"고등학교에서 배우고 싶은 분야가 이미 정해져 있어요.",dir:1,w:3},
+ {id:"S1-04",t:"하고 싶은 일에 대해 영상·체험·상담 등으로 알아본 적이 있어요.",dir:1,w:1},
+ {id:"S1-05",t:"고등학교를 졸업하면 어떻게 하고 싶나요?",type:"choice",dir:1,w:3,
+   opts:[["A","바로 취업하고 싶어요",2],["B","취업한 뒤 일하면서 대학에 가고 싶어요",2],["C","전문대학에 가고 싶어요",1],["D","4년제 대학에 바로 가고 싶어요",-2],["E","아직 모르겠어요",0]]},
+ {id:"S1-06",t:"고등학생 때 자격증을 따고 기술을 익히고 싶어요.",dir:1,w:2},
+ {id:"S1-07",t:"빨리 사회에 나가 내 일을 하고 돈을 벌고 싶어요.",dir:1,w:2},
+ {id:"S1-08",t:"국어·영어·수학 공부를 앞으로 3년 더 집중해서 해도 괜찮아요.",dir:-1,w:2},
+ {id:"S1-09",t:"오래 앉아 있는 것보다 몸을 움직이며 작업할 때 집중이 잘 돼요.",dir:1,w:1},
+ {id:"S1-10",t:"실습보다 설명을 듣고 정리하는 수업이 더 좋아요.",dir:0,w:0},
+ {id:"S1-11",t:"좋아하는 분야가 있다면 고등학교도 그 분야에 맞춰 고르고 싶어요.",dir:1,w:1},
+ {id:"S1-12",t:"회사·가게·작업장 같은 학교 밖 현장에서 일해 보고 싶어요.",dir:1,w:1},
+ {id:"S1-13",t:"고등학교 선택은 주로 누구의 생각인가요?",type:"choice",dir:0,w:0,
+   opts:[["A","내가 원해서",0],["B","가족이나 선생님의 권유",0],["C","친구를 따라서",0],["D","아직 모르겠어요",0]]},
+ {id:"S1-14",t:"특성화고에 가면 대학에 갈 수 없다고 생각하나요?",type:"choice",dir:0,w:0,
+   opts:[["예","예",0],["아니오","아니오",0],["모르겠다","잘 모르겠어요",0]]},
+ {id:"S1-15",t:"어떤 분야를 공부하고 싶은지 아직 전혀 모르겠어요.",dir:0,w:0}
+];
+const RIA = ["R","I","A","S","E","C"];
+const RIA_LABEL = {R:"만들고 고치는",I:"원리를 탐구하는",A:"표현하고 창작하는",S:"사람을 돕는",E:"이끌고 설득하는",C:"꼼꼼히 정리하는"};
+const H_ITEMS = {
+ R:["고장 난 물건을 분해하고 고쳐 보기","공구나 기계로 무언가 만들기","밖에서 몸을 쓰며 일하기"],
+ I:["어떤 일이 왜 그런지 원리 찾아보기","과학 실험이나 관찰하기","문제를 논리적으로 분석해서 풀기"],
+ A:["그림·디자인·영상으로 내 생각 표현하기","노래·연기·춤처럼 무대에서 표현하기","남들과 다른 새로운 아이디어 내기"],
+ S:["친구 고민을 들어주고 도와주기","어린아이나 아픈 사람 돌보기","처음 온 사람에게 친절하게 안내하기"],
+ E:["모둠 활동에서 리더 맡기","물건이나 아이디어를 남에게 소개하고 판매하기","행사나 이벤트 기획하기"],
+ C:["자료를 표로 깔끔하게 정리하기","돈 계산이나 용돈 기록하기","정해진 규칙과 순서대로 꼼꼼히 처리하기"]
+};
+// interleave types so the same type never appears twice in a row
+const S2H = []; for (let k=0;k<3;k++) RIA.forEach((t,i)=>S2H.push({id:`S2-H${t}${k+1}`,type:t,t:H_ITEMS[t][k]}));
+const CAPS = ["컴퓨터","손재주","기계","그림","요리","응대","계산","체력","외국어","음악영상","과학"];
+const CAP_LABEL = {컴퓨터:"컴퓨터·코딩",손재주:"손으로 정밀하게 만들기",기계:"기계·도구 다루기",그림:"그림·디자인 감각",요리:"요리·음식 만들기",응대:"사람과 대화하기",계산:"계산하고 꼼꼼히 정리하기",체력:"체력",외국어:"외국어",음악영상:"음악·영상·공연",과학:"과학 실험·탐구"};
+const CAP_Q = {컴퓨터:"컴퓨터 활용이나 코딩",손재주:"손으로 정밀하게 만들기",기계:"기계나 도구 다루기",그림:"그림 그리기나 꾸미기",요리:"요리나 음식 만들기",응대:"처음 보는 사람과 대화하기",계산:"계산하고 꼼꼼히 정리하기",체력:"오래 서 있거나 몸 쓰는 활동",외국어:"외국어로 말하기",음악영상:"음악·영상 만들기나 공연",과학:"과학 실험이나 탐구"};
+const CAP_OPTS = [[3,"잘해요"],[2,"해 봤어요"],[1,"관심만 있어요"],[0,"잘 모르겠어요"]];
+const EMOJI = {IT:"💻",GAME:"🎮",DSN:"🎨",MEDIA:"🎬",ART:"🎤",MECH:"🤖",ELEC:"⚡",SEMI:"🔬",AUTO:"🚆",ARCH:"🏠",ENV:"🏗️",BIO:"🧪",BIZ:"💼",MKT:"🛍️",TOUR:"✈️",COOK:"🍳",BEAUTY:"💄",HEALTH:"🩺",FASHION:"👗",SPORTS:"⚽",SAFETY:"🚒",PET:"🐶",CARE:"🧸",CREATOR:"📱"};
+const PAIRS = [
+ {ax:"field",a:"책상에서 컴퓨터로 하는 일",b:"여기저기 다니며 현장에서 하는 일"},
+ {ax:"field",a:"조용한 실내 작업실",b:"사람이 오가는 바쁜 현장"},
+ {ax:"team",a:"혼자 집중해서 끝내는 일",b:"여럿이 나눠서 함께 하는 일"},
+ {ax:"team",a:"내 방식대로 혼자 하기",b:"팀원과 의견을 맞춰 가며 하기"},
+ {ax:"obj",a:["사람","사람을 돕거나 응대하기"],b:["사물","기계나 물건 다루기"]},
+ {ax:"obj",a:["데이터","숫자나 자료 정리하기"],b:["아이디어","새로운 것 만들어 내기"]},
+ {ax:"obj",a:["사람","사람을 돕거나 응대하기"],b:["데이터","숫자나 자료 정리하기"]},
+ {ax:"obj",a:["사물","기계나 물건 다루기"],b:["아이디어","새로운 것 만들어 내기"]},
+ {ax:"obj",a:["사람","사람을 돕거나 응대하기"],b:["아이디어","새로운 것 만들어 내기"]},
+ {ax:"obj",a:["사물","기계나 물건 다루기"],b:["데이터","숫자나 자료 정리하기"]}
+];
+const LIKERT = [[1,"전혀 아니에요"],[2,"아닌 편이에요"],[3,"보통이에요"],[4,"그런 편이에요"],[5,"매우 그래요"]];
+
+/* ---------- flow ---------- */
+const STEPS = [
+ {key:"start",lbl:"출발"},{key:"s1",lbl:"계열"},{key:"mid",lbl:"중간 확인"},{key:"h",lbl:"흥미"},
+ {key:"c",lbl:"잘하는 것"},{key:"f",lbl:"관심분야"},{key:"p",lbl:"일하는 방식"},{key:"x",lbl:"조건"},{key:"res",lbl:"결과"}
+];
+const st = { step:"start", i:0, name:"", a1:{}, ah:{}, ac:{}, fav:[], ap:{}, cond:{male:true,female:true,coed:true,meister:true}, home:null, sort:"fit" };
+/* 자치구 중심점(구청 위치 근사) — 집 위치를 구로 고르거나, 좌표가 없는 학교의 대략 위치로 씀 */
+const GU = {종로구:[37.5735,126.9790],중구:[37.5638,126.9976],용산구:[37.5324,126.9907],성동구:[37.5634,127.0369],광진구:[37.5385,127.0823],동대문구:[37.5744,127.0396],중랑구:[37.6066,127.0927],성북구:[37.5894,127.0167],강북구:[37.6397,127.0257],도봉구:[37.6688,127.0471],노원구:[37.6542,127.0568],은평구:[37.6027,126.9291],서대문구:[37.5791,126.9368],마포구:[37.5663,126.9019],양천구:[37.5170,126.8664],강서구:[37.5510,126.8495],구로구:[37.4954,126.8874],금천구:[37.4569,126.8955],영등포구:[37.5264,126.8962],동작구:[37.5124,126.9393],관악구:[37.4784,126.9516],서초구:[37.4837,127.0324],강남구:[37.5172,127.0473],송파구:[37.5145,127.1059],강동구:[37.5301,127.1238]};
+function hav(a,b){ const R=6371,t=x=>x*Math.PI/180; const dl=t(b[0]-a[0]), dn=t(b[1]-a[1]); const h=Math.sin(dl/2)**2+Math.cos(t(a[0]))*Math.cos(t(b[0]))*Math.sin(dn/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+function schoolPos(s){ if (s.lat!=null && s.lng!=null) return {p:[s.lat,s.lng],approx:false}; if (GU[s.gu]) return {p:GU[s.gu],approx:true}; return null; }
+function distOf(s){ if(!st.home) return null; const sp=schoolPos(s); if(!sp) return null; const km=hav([st.home.lat,st.home.lng],sp.p); return {km, approx: sp.approx || st.home.src==="gu", sameGu: st.home.src==="gu" && sp.approx && st.home.label===s.gu}; }
+
+const $ = s=>document.querySelector(s);
+const app = $("#app");
+const esc = s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const codeName = c => (DATA.codes.find(x=>x.code===c)||{name:c}).name;
+
+function drawRoute(){
+  const idx = STEPS.findIndex(s=>s.key===st.step);
+  $("#route").innerHTML = STEPS.map((s,i)=>{
+    const cls = i<idx?"done":(i===idx?"now":"");
+    const seg = i<STEPS.length-1?`<div class="seg ${i<idx?"done":""}"></div>`:"";
+    return `<div class="st ${cls}"><div class="dot"></div><div class="lbl">${s.lbl}</div></div>${seg}`;
+  }).join("");
+}
+function go(step,i=0){ st.step=step; st.i=i; render(); window.scrollTo({top:0}); }
+function render(){
+  drawRoute();
+  ({start:vStart,s1:vS1,mid:vMid,h:vH,c:vC,f:vF,p:vP,x:vX,res:vRes})[st.step]();
+  const f = app.querySelector("[data-focus]"); if (f) f.focus({preventScroll:true});
+}
+
+/* ---------- views ---------- */
+function vStart(){
+  const nS = DATA.schools.length, nD = DATA.depts.length;
+  app.innerHTML = `<section class="panel fade">
+    <div class="hero-line" aria-hidden="true"></div>
+    <h1>나에게 맞는 특성화고 노선을 찾아봐요</h1>
+    <p>질문에 답하면 일반고와 특성화고 중 어느 쪽이 더 잘 맞는지 알려 주고, 서울 특성화고의 학과 중에서 나와 잘 맞는 곳을 노선도로 보여 줘요.</p>
+    <div class="facts">
+      <div><b>${nS}개</b><span>서울 특성화고·마이스터고</span></div>
+      <div><b>${nD}개</b><span>학과</span></div>
+      <div><b>약 15분</b><span>문항 70개 정도</span></div>
+    </div>
+    <div class="field"><label for="nm">이름 (선택, 결과를 인쇄할 때만 쓰여요)</label><input id="nm" autocomplete="off" value="${esc(st.name)}"></div>
+    <p class="small muted">답한 내용은 이 화면에서만 쓰이고 어디에도 저장되지 않아요. 결과는 진로를 정해 주는 답이 아니라 선생님, 가족과 이야기 나눌 때 쓰는 자료예요.</p>
+    <div class="row"><button class="btn" id="go" data-focus>시작하기</button></div>
+  </section>`;
+  $("#go").onclick=()=>{ st.name=$("#nm").value.trim(); go("s1",0); };
+}
+
+function likertHTML(cur){
+  return `<div class="likert" role="group" aria-label="답 고르기">${LIKERT.map(([v,t])=>
+    `<button data-v="${v}" class="${cur===v?"sel":""}" aria-pressed="${cur===v}"><span class="n">${v}</span><span class="t">${t}</span></button>`).join("")}</div>`;
+}
+function qFrame(section,i,n,inner,{canNext=false}={}){
+  return `<section class="panel fade">
+    <div class="qmeta"><span>${section}</span><span>${i+1} / ${n}</span></div>
+    ${inner}
+    <div class="nav noprint">
+      <button class="linkbtn" id="back">이전</button>
+      ${canNext?`<button class="btn" id="next">다음</button>`:`<span></span>`}
+    </div></section>`;
+}
+function bindLikert(onPick){
+  app.querySelectorAll(".likert button").forEach(b=>b.onclick=()=>onPick(+b.dataset.v));
+  app.querySelector(".likert button").setAttribute("data-focus","");
+}
+document.addEventListener("keydown",e=>{
+  if (e.target.tagName==="INPUT") return;
+  const n = +e.key; if (n>=1&&n<=5){ const b=app.querySelector(`.likert button[data-v="${n}"]`); if (b){ b.click(); e.preventDefault(); } }
+});
+
+function vS1(){
+  const q = S1[st.i], cur = st.a1[q.id];
+  let inner = `<p class="qtext">${esc(q.t)}</p>`;
+  if (q.type==="choice"){
+    inner += `<div class="choices">${q.opts.map(([v,t])=>`<button data-v="${esc(v)}" class="${cur===v?"sel":""}">${esc(t)}</button>`).join("")}</div>`;
+  } else inner += likertHTML(cur);
+  app.innerHTML = qFrame("1단계 · 어떤 고등학교가 맞을까",st.i,S1.length,inner);
+  const next = ()=> st.i<S1.length-1 ? go("s1",st.i+1) : go("mid");
+  if (q.type==="choice"){
+    app.querySelectorAll(".choices button").forEach((b,k)=>{ if(!k) b.setAttribute("data-focus",""); b.onclick=()=>{ st.a1[q.id]=b.dataset.v; next(); }; });
+    const f=app.querySelector("[data-focus]"); if(f) f.focus();
+  } else bindLikert(v=>{ st.a1[q.id]=v; next(); });
+  $("#back").onclick=()=> st.i>0 ? go("s1",st.i-1) : go("start");
+}
+
+function score1(){
+  let sum=0,max=0;
+  S1.forEach(q=>{
+    if (!q.dir) return; max += q.w*2;
+    const a = st.a1[q.id]; if (a==null) return;
+    if (q.type==="choice"){ const o=q.opts.find(x=>x[0]===a); sum += (o?o[2]:0)*q.dir*q.w; }
+    else sum += (a-3)*q.dir*q.w;
+  });
+  const idx = Math.round((sum+max)/(2*max)*100);
+  let v = idx>=CFG.hi?"특성화고 권장":(idx<CFG.lo?"일반고 권장":"탐색 필요");
+  const override = st.a1["S1-05"]==="D" && (st.a1["S1-03"]??3)<=2;
+  if (override) v="탐색 필요";
+  const inc=[];
+  if (st.a1["S1-01"]!=null && st.a1["S1-10"]!=null && Math.abs(st.a1["S1-01"]-(6-st.a1["S1-10"]))>=3) inc.push(0);
+  if (st.a1["S1-03"]!=null && st.a1["S1-15"]!=null && Math.abs(st.a1["S1-03"]-(6-st.a1["S1-15"]))>=3) inc.push(2);
+  // top reasons: factors contributing most toward the verdict side
+  const fac={}; const FN={"S1-01":"실습 중심 학습","S1-02":"이론 중심 학습","S1-03":"진로 분야","S1-04":"진로 탐색 경험","S1-05":"졸업 후 계획","S1-06":"자격증·기술","S1-07":"빠른 사회 진출","S1-08":"교과 공부","S1-09":"몸으로 하는 작업","S1-11":"분야 맞춤 진학","S1-12":"현장 경험"};
+  S1.forEach(q=>{ if(!q.dir) return; const a=st.a1[q.id]; if(a==null) return;
+    const s = q.type==="choice" ? (q.opts.find(x=>x[0]===a)||[0,0,0])[2]*q.dir*q.w : (a-3)*q.dir*q.w; fac[q.id]=s; });
+  return {sum,max,idx,v,override,inc,fac,FN,info:["예","모르겠다"].includes(st.a1["S1-14"])};
+}
+function reasons1(r){
+  const ids = Object.keys(r.fac).filter(k=> r.v==="일반고 권장" ? r.fac[k]<0 : r.fac[k]>0).sort((a,b)=>Math.abs(r.fac[b])-Math.abs(r.fac[a])).slice(0,3);
+  const T = {
+    "S1-01":"직접 만들고 실습하며 배우는 방식을 좋아해요","S1-02": r.fac["S1-02"]<0?"개념을 깊이 이해하는 공부를 즐겨요":"이론 공부보다는 다른 방식이 더 잘 맞아요",
+    "S1-03":"배우고 싶은 분야가 이미 정해져 있어요","S1-04":"하고 싶은 일을 스스로 알아본 적이 있어요",
+    "S1-05": r.fac["S1-05"]<0?"4년제 대학 직행을 원해요":"졸업 후 취업이나 일과 병행하는 진학을 생각하고 있어요",
+    "S1-06":"자격증과 기술을 일찍 갖고 싶어 해요","S1-07":"빨리 사회에 나가 내 일을 하고 싶어 해요",
+    "S1-08": r.fac["S1-08"]<0?"국·영·수 공부를 계속 이어가는 것도 괜찮다고 했어요":"국·영·수 중심 공부를 3년 더 하는 건 부담스러워해요",
+    "S1-09":"몸을 움직이며 작업할 때 집중이 잘 돼요","S1-11":"좋아하는 분야에 맞춰 학교를 고르고 싶어 해요","S1-12":"학교 밖 현장 경험을 원해요"};
+  // when verdict is 일반고, reverse-meaning phrasing for positive-direction items with low answers
+  const TN = {"S1-01":"실습보다 다른 학습 방식이 더 편해요","S1-03":"배우고 싶은 분야가 아직 정해지지 않았어요","S1-06":"자격증·기술을 서둘러 갖는 데 큰 관심은 없어요","S1-07":"사회 진출을 서두르고 싶진 않아요","S1-09":"앉아서 집중하는 공부도 잘 맞아요","S1-11":"분야보다 다른 기준으로 학교를 고르고 싶어 해요","S1-12":"현장 경험에 큰 관심은 없어요","S1-04":"진로를 아직 많이 알아보지 않았어요"};
+  return ids.map(k=> (r.fac[k]<0 && TN[k]) ? TN[k] : T[k]);
+}
+
+function vMid(){
+  const r = score1();
+  const msg = {
+    "특성화고 권장":"실습과 기술 중심의 특성화고가 잘 맞는 편이에요.",
+    "일반고 권장":"지금 답으로는 일반고가 더 잘 맞는 편이에요. 그래도 관심 있는 분야를 확인해 보고 싶다면 계속 진행해도 돼요.",
+    "탐색 필요":"어느 한쪽으로 정하기는 아직 일러요. 다음 질문으로 관심 분야를 함께 살펴봐요."
+  }[r.v];
+  const why = reasons1(r);
+  app.innerHTML = `<section class="panel fade">
+    <p class="muted small">1단계 결과</p>
+    <div class="verdict">${r.v}</div>
+    <p>${msg}</p>
+    <div class="gauge" role="img" aria-label="특성화고 적합 지수 ${r.idx}점">
+      <div class="mk" style="left:${r.idx}%"><b>${r.idx}</b></div>
+      <span class="ax" style="left:0%;transform:none">일반고 쪽</span>
+      <span class="ax" style="left:${CFG.lo}%">${CFG.lo}</span>
+      <span class="ax" style="left:${CFG.hi}%">${CFG.hi}</span>
+      <span class="ax" style="left:100%;transform:translateX(-100%)">특성화고 쪽</span>
+    </div>
+    ${why.length?`<h3>이렇게 판단했어요</h3><ul class="why" style="--lc:var(--go);padding-left:0">${why.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`:""}
+    ${r.override?`<div class="note">4년제 대학 직행을 원하고 분야가 아직 정해지지 않았다면, 서두르지 말고 선생님과 함께 더 알아보는 게 좋아요.</div>`:""}
+    ${r.inc.length?`<div class="note warn">서로 비슷한 질문에 반대로 답한 곳이 있어요. 한 번 더 생각해 볼까요?
+       <div class="row" style="margin-top:8px">${r.inc.map(k=>`<button class="btn ghost" data-re="${k}">${k+1}번 질문 다시 보기</button>`).join("")}</div></div>`:""}
+    <div class="row between noprint" style="margin-top:20px">
+      <button class="linkbtn" id="back">이전</button>
+      <button class="btn" id="next" data-focus>관심 분야 찾기 계속하기</button>
+    </div></section>`;
+  app.querySelectorAll("[data-re]").forEach(b=>b.onclick=()=>go("s1",+b.dataset.re));
+  $("#back").onclick=()=>go("s1",S1.length-1);
+  $("#next").onclick=()=>go("h",0);
+}
+
+function vH(){
+  const q=S2H[st.i], cur=st.ah[q.id];
+  app.innerHTML = qFrame("2단계 · 이런 활동, 얼마나 좋아해요?",st.i,S2H.length,`<p class="qtext">${esc(q.t)}</p>${likertHTML(cur)}`);
+  bindLikert(v=>{ st.ah[q.id]=v; st.i<S2H.length-1?go("h",st.i+1):go("c",0); });
+  $("#back").onclick=()=> st.i>0?go("h",st.i-1):go("mid");
+}
+function vC(){
+  const k=CAPS[st.i], cur=st.ac[k];
+  const inner = `<p class="qtext">${esc(CAP_Q[k])}</p><div class="choices">${CAP_OPTS.map(([v,t])=>`<button data-v="${v}" class="${cur===v?"sel":""}">${t}</button>`).join("")}</div>`;
+  app.innerHTML = qFrame("2단계 · 이건 얼마나 해 봤어요?",st.i,CAPS.length,inner);
+  app.querySelectorAll(".choices button").forEach((b,j)=>{ if(!j) b.setAttribute("data-focus",""); b.onclick=()=>{ st.ac[k]=+b.dataset.v; st.i<CAPS.length-1?go("c",st.i+1):go("f"); }; });
+  app.querySelector("[data-focus]").focus();
+  $("#back").onclick=()=> st.i>0?go("c",st.i-1):go("h",S2H.length-1);
+}
+function vF(){
+  const chips = DATA.codes.map(c=>{ const r=st.fav.indexOf(c.code);
+    return `<button class="chip ${r>=0?"sel":""}" data-c="${c.code}" aria-pressed="${r>=0}"><span class="em" aria-hidden="true">${EMOJI[c.code]||"•"}</span>${esc(c.name)}${r>=0?`<span class="rk">${r+1}</span>`:""}</button>`;}).join("");
+  app.innerHTML = `<section class="panel fade">
+    <div class="qmeta"><span>2단계 · 관심 있는 분야</span><span>${st.fav.length} / 3</span></div>
+    <p class="qtext" style="min-height:0;margin-bottom:6px">가장 관심 있는 분야를 순서대로 골라 주세요.</p>
+    <p class="small muted">최대 3개까지 고를 수 있고, 먼저 고른 것이 1순위예요. 다시 누르면 빠져요.</p>
+    <div class="chips">${chips}</div>
+    <div class="nav noprint"><button class="linkbtn" id="back">이전</button>
+      <div class="row"><button class="btn ghost" id="none">아직 없어요</button><button class="btn" id="next" ${st.fav.length?"":"disabled"}>다음</button></div></div>
+  </section>`;
+  app.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{
+    const c=b.dataset.c, r=st.fav.indexOf(c);
+    if (r>=0) st.fav.splice(r,1); else if (st.fav.length<3) st.fav.push(c);
+    vF(); const nb=app.querySelector(`.chip[data-c="${c}"]`); if(nb) nb.focus();
+  });
+  $("#back").onclick=()=>go("c",CAPS.length-1);
+  $("#none").onclick=()=>{ st.fav=[]; go("p",0); };
+  $("#next").onclick=()=>go("p",0);
+}
+function vP(){
+  const q=PAIRS[st.i], cur=st.ap[st.i];
+  const la = Array.isArray(q.a)?q.a[1]:q.a, lb = Array.isArray(q.b)?q.b[1]:q.b;
+  app.innerHTML = qFrame("2단계 · 둘 중 더 끌리는 쪽은?",st.i,PAIRS.length,
+    `<p class="qtext" style="min-height:0">어떤 일이 더 끌려요?</p>
+     <div class="pair"><button data-v="a" class="${cur==="a"?"sel":""}" data-focus>${esc(la)}</button><button data-v="b" class="${cur==="b"?"sel":""}">${esc(lb)}</button></div>
+     <p class="vs">딱 맞지 않아도 조금 더 끌리는 쪽을 골라요</p>`);
+  app.querySelectorAll(".pair button").forEach(b=>b.onclick=()=>{ st.ap[st.i]=b.dataset.v; st.i<PAIRS.length-1?go("p",st.i+1):go("x"); });
+  $("#back").onclick=()=> st.i>0?go("p",st.i-1):go("f");
+}
+function vX(){
+  const c=st.cond;
+  app.innerHTML = `<section class="panel fade">
+    <div class="qmeta"><span>2단계 · 마지막 조건</span><span></span></div>
+    <p class="qtext" style="min-height:0">결과에 보여 줄 학교를 골라 주세요.</p>
+    <div class="checks">
+      <label><input type="checkbox" id="cCoed" ${c.coed?"checked":""}> 남녀공학</label>
+      <label><input type="checkbox" id="cFemale" ${c.female?"checked":""}> 여학교</label>
+      <label><input type="checkbox" id="cMale" ${c.male?"checked":""}> 남학교</label>
+      <label><input type="checkbox" id="cMeister" ${c.meister?"checked":""}> 마이스터고도 함께 보기</label>
+    </div>
+    <p class="small muted">학교 유형은 하나 이상 골라야 해요. 이 조건은 점수에는 영향을 주지 않고, 보여 줄 학교만 걸러요.</p>
+    <h3 style="margin-top:22px">집 위치 (선택)</h3>
+    <p class="small muted">넣으면 결과에서 학교를 집에서 가까운 순으로 볼 수 있어요. 위치는 거리 계산에만 쓰고 저장하지 않아요.</p>
+    <div class="row" style="margin:8px 0 6px">
+      <select id="hGu" aria-label="사는 자치구" style="font:inherit;padding:11px 12px;border-radius:10px;border:1.5px solid var(--rule);background:var(--paper);color:var(--ink);min-height:48px">
+        <option value="">사는 구 고르기</option>${Object.keys(GU).sort((a,b)=>a.localeCompare(b,"ko")).map(g=>`<option ${st.home&&st.home.src==="gu"&&st.home.label===g?"selected":""}>${g}</option>`).join("")}
+      </select>
+      <button class="btn ghost" id="hGps" type="button">내 위치 사용</button>
+    </div>
+    <p class="small" id="hMsg" aria-live="polite">${st.home?esc(homeLabel()):""}</p>
+    <div class="nav noprint"><button class="linkbtn" id="back">이전</button><button class="btn" id="next" data-focus>결과 보기</button></div>
+  </section>`;
+  const sync=()=>{ c.coed=$("#cCoed").checked; c.female=$("#cFemale").checked; c.male=$("#cMale").checked; c.meister=$("#cMeister").checked;
+    $("#next").disabled=!(c.coed||c.female||c.male); };
+  app.querySelectorAll("input").forEach(i=>i.onchange=sync); sync();
+  $("#hGu").onchange=e=>{ const g=e.target.value; st.home = g?{lat:GU[g][0],lng:GU[g][1],src:"gu",label:g}:null; $("#hMsg").textContent=st.home?homeLabel():""; };
+  $("#hGps").onclick=()=>{
+    const m=$("#hMsg");
+    if(!navigator.geolocation){ m.textContent="이 브라우저에서는 위치를 쓸 수 없어요. 사는 구를 골라 주세요."; return; }
+    m.textContent="위치를 확인하는 중이에요…";
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const la=pos.coords.latitude, ln=pos.coords.longitude;
+      if(la<37.41||la>37.72||ln<126.76||ln>127.19){ m.textContent="서울 밖 위치로 확인됐어요. 사는 구를 직접 골라 주세요."; return; }
+      st.home={lat:la,lng:ln,src:"gps",label:"현재 위치"}; $("#hGu").value=""; m.textContent=homeLabel();
+    },()=>{ m.textContent="위치 권한이 없어 확인하지 못했어요. 사는 구를 골라 주세요."; },{enableHighAccuracy:false,timeout:10000});
+  };
+  $("#back").onclick=()=>go("p",PAIRS.length-1);
+  $("#next").onclick=()=>go("res");
+}
+
+/* ---------- 2단계 matching ---------- */
+function profile(){
+  const h = RIA.map(t=>{ const v=[1,2,3].map(k=>st.ah[`S2-H${t}${k}`]).filter(x=>x!=null); return v.length?(v.reduce((a,b)=>a+b,0)/v.length-1)/4:0.5; });
+  const c = CAPS.map(k=> (st.ac[k]??0)/3);
+  const cnt = a=>PAIRS.reduce((n,q,i)=>n+(q.ax===a&&st.ap[i]==="b"?1:0),0);
+  const obj = {사람:0,사물:0,데이터:0,아이디어:0};
+  PAIRS.forEach((q,i)=>{ if(q.ax!=="obj"||!st.ap[i]) return; obj[(st.ap[i]==="a"?q.a:q.b)[0]]++; });
+  const s = [cnt("field")/2, cnt("team")/2, obj.사람/3, obj.사물/3, obj.데이터/3, obj.아이디어/3];
+  return {h,c,s,fav:st.fav.slice()};
+}
+function pearson(x,y){
+  const n=x.length, mx=x.reduce((a,b)=>a+b,0)/n, my=y.reduce((a,b)=>a+b,0)/n;
+  let sxy=0,sx=0,sy=0; for(let i=0;i<n;i++){ const a=x[i]-mx,b=y[i]-my; sxy+=a*b; sx+=a*a; sy+=b*b; }
+  return (sx===0||sy===0)?0:sxy/Math.sqrt(sx*sy);
+}
+function scoreGroup(g,p){
+  const fw=[1,.7,.5]; let fi=0, fcode="";
+  p.fav.forEach((c,k)=>{ if(g.codes.includes(c) && fw[k]>fi){ fi=fw[k]; fcode=c; } });
+  const hob=(pearson(p.h,g.h)+1)/2;
+  const sw=g.c.reduce((a,b)=>a+b,0); const cap = sw? g.c.reduce((a,w,i)=>a+w*p.c[i],0)/sw : 0;
+  const sty = 1 - g.s.reduce((a,v,i)=>a+Math.abs(v-p.s[i]),0)/6;
+  const B=CFG.base, bs=B.h+B.c+B.s;
+  const rest = (hob*B.h+cap*B.c+sty*B.s)/bs;
+  const noFav = p.fav.length===0;
+  const tot = noFav ? rest : fi*CFG.W + rest*(1-CFG.W);
+  const k = noFav?1:(1-CFG.W);
+  const contrib = {f: noFav?0:fi*CFG.W, h:hob*B.h/bs*k, c:cap*B.c/bs*k, s:sty*B.s/bs*k};
+  return {g, total:Math.round(tot*1000)/10, fi, fcode, hob, cap, sty, contrib};
+}
+function reasons2(r,p){
+  const out=[]; const order=Object.entries(r.contrib).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  for (const k of order){
+    if (out.length>=2) break;
+    if (k==="f" && r.fi>0) out.push(`관심 있다고 고른 ‘${codeName(r.fcode)}’ 분야예요`);
+    if (k==="h" && r.hob>=0.6){ let best=0,bi=0; RIA.forEach((t,i)=>{ const v=p.h[i]*r.g.h[i]; if(v>best){best=v;bi=i;} }); out.push(`‘${RIA_LABEL[RIA[bi]]}’ 활동을 좋아하는 흥미와 잘 맞아요`); }
+    if (k==="c" && r.cap>=0.4){ let best=0,bi=0; CAPS.forEach((t,i)=>{ const v=p.c[i]*r.g.c[i]; if(v>best){best=v;bi=i;} }); if(best>0) out.push(`‘${CAP_LABEL[CAPS[bi]]}’ 실력을 살릴 수 있어요`); }
+    if (k==="s" && r.sty>=0.7) out.push(`실내·현장, 혼자·함께 같은 일하는 방식이 비슷해요`);
+  }
+  if (!out.length) out.push("여러 영역이 고르게 맞아요");
+  return out;
+}
+function homeLabel(){ const h=st.home; if(!h) return ""; return h.src==="gps"?"현재 위치를 기준으로 거리를 계산해요. 학교에서 진단 중이라면 학교 위치가 잡혔을 수 있어요.":`${h.label} 중심을 기준으로 대략 계산해요.`; }
+function schoolOK(s){
+  const c=st.cond;
+  if (s.type==="마이스터고" && !c.meister) return false;
+  return (s.gender==="공학"&&c.coed)||(s.gender==="여"&&c.female)||(s.gender==="남"&&c.male);
+}
+function deptsFor(gid,gs){
+  const sm = Object.fromEntries(DATA.schools.map(s=>[s.name,s]));
+  const gsc = Object.fromEntries(gs.map(r=>[r.g.id,r.total]));
+  return DATA.depts.filter(d=>(d.g===gid||d.sub===gid) && sm[d.school] && schoolOK(sm[d.school]))
+    .map(d=>({...d, sc: d.sub ? gsc[d.g]*CFG.mainW + gsc[d.sub]*CFG.subW : gsc[d.g], s:sm[d.school], isMain:d.g===gid}))
+    .map(d=>({...d, dist: distOf(d.s)}))
+    .sort((a,b)=> (st.sort==="near" && a.dist && b.dist) ? (a.dist.km-b.dist.km) || (b.sc-a.sc)
+                                                      : (b.isMain-a.isMain) || (b.sc-a.sc) || (b.quota-a.quota));
+}
+function pickDistinct(list,n){
+  const seen=new Set(), out=[];
+  for (const d of list){ if(!seen.has(d.school)){ seen.add(d.school); out.push(d); if(out.length===n) break; } }
+  return out;
+}
+function stationHTML(d){
+  const g=d.s.gender==="공학"?"남녀공학":(d.s.gender==="여"?"여학교":"남학교");
+  const bits=[d.isMain?null:"관련 학과", d.s.type==="마이스터고"?"마이스터고":null, g, `정원 ${d.quota}명`, d.common?"1학년 공통모집 후 2학년에 학과 배정":null, d.s.dorm==="있음"?"기숙사 있음":null].filter(Boolean);
+  if (d.dist) bits.unshift(d.dist.sameGu ? "같은 구" : `${d.dist.approx?"약 ":"직선 "}${d.dist.km.toFixed(1)}km`);
+  const nm = d.school.replace(/고등학교$/,"고");
+  return `<div class="sta"><div><span class="nm">${esc(nm)}</span> <span class="dp">${esc(d.dept)}</span></div>
+    <div class="inf">${esc(bits.join(", "))}${d.s.url?` <a class="noprint" href="${esc(d.s.url)}" target="_blank" rel="noopener">학교 누리집</a>`:""}</div></div>`;
+}
+function careerHTML(g){
+  const c=g.career||{now:[],more:[],univ:[]}; if(!c.now.length&&!c.more.length) return "";
+  const tags=(a,cls)=>a.map(t=>`<span class="tag ${cls}">${esc(t)}</span>`).join("");
+  return `<section class="career" aria-label="졸업 후 진로"><h4>졸업 후 갈 수 있는 길</h4><dl>
+    ${c.now.length?`<dt>바로 취업</dt><dd>${tags(c.now,"now")}</dd>`:""}
+    ${c.more.length?`<dt>더 배우면</dt><dd>${tags(c.more,"")}</dd>`:""}
+    ${c.univ.length?`<dt>대학 학과</dt><dd class="plain">${esc(c.univ.join(", "))}</dd>`:""}
+  </dl></section>`;
+}
+function vRes(){
+  const r1=score1(), p=profile();
+  const gs = DATA.groups.map(g=>scoreGroup(g,p)).sort((a,b)=>b.total-a.total);
+  const top = gs.slice(0,3), colors=["var(--l1)","var(--l2)","var(--l3)"];
+  const low = top[0].total < CFG.low;
+  const date = new Date().toLocaleDateString("ko-KR");
+  const lines = top.map((r,i)=>{
+    const all = deptsFor(r.g.id,gs), pick = pickDistinct(all,3), rest = all.filter(d=>!pick.includes(d));
+    return `<article class="line" style="--lc:${colors[i]}">
+      <div class="line-head"><div class="badge" style="background:${colors[i]}" aria-label="${i+1}순위">${i+1}</div>
+        <div><h3>${esc(r.g.name)}</h3><div class="small muted">${esc(r.g.depts)}</div></div>
+        <div class="score">맞는 정도<b>${r.total}</b></div></div>
+      <ul class="why">${reasons2(r,p).map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+      <div class="meta">따 볼 수 있는 자격증: ${esc(r.g.certs)}</div>
+      ${careerHTML(r.g)}
+      <p class="meta" style="margin:0;padding-bottom:4px"><b>이 분야를 배울 수 있는 학교</b></p>
+      ${pick.length?`<div class="stations">${pick.map(stationHTML).join("")}<div class="extra" hidden>${rest.map(stationHTML).join("")}</div></div>
+        ${rest.length?`<div class="more noprint"><button class="btn ghost" data-more>이 노선의 학과 ${rest.length}개 더 보기</button></div>`:""}`
+        :`<p class="empty">고른 학교 조건에 맞는 학교가 없어요. 조건을 바꿔 보세요.</p>`}
+    </article>`;
+  }).join("");
+  const others = gs.slice(3,10).map(r=>`<tr><td>${esc(r.g.name)}</td><td>${r.total}</td></tr>`).join("");
+  app.innerHTML = `<section class="fade">
+    <div class="panel">
+      <p class="muted small">${st.name?esc(st.name)+", ":""}${date}</p>
+      <h1 style="margin-bottom:6px">나의 추천 노선</h1>
+      <p>1단계 판단은 <b>${r1.v}</b>(특성화고 적합 지수 ${r1.idx}점)이에요. 아래는 서울 특성화고 학과군 30개 중 나와 가장 잘 맞는 세 노선이에요.</p>
+      ${r1.v==="일반고 권장"?`<div class="note">일반고가 더 맞는 편으로 나왔지만, 관심 분야를 살펴보는 참고 자료로 보세요.</div>`:""}
+      ${low?`<div class="note warn">아직 뚜렷하게 잘 맞는 분야가 보이지 않아요. 아래 결과는 참고만 하고, 진로 선생님과 함께 관심 분야를 더 찾아보길 권해요.</div>`:""}
+      ${r1.info?`<div class="note"><b>특성화고에서도 대학에 갈 수 있어요.</b> 대학에는 특성화고 졸업생을 위한 전형이 따로 있고, 취업한 뒤 일하면서 다니는 재직자 전형도 있어요. 고등학교 1학년을 다니다가 일반고와 특성화고 사이를 옮기는 진로변경 전학 제도도 있어요.</div>`:""}
+    </div>
+    <div class="row noprint" role="group" aria-label="학교 정렬" style="margin-top:18px">
+      <button class="btn ${st.sort==="fit"?"":"ghost"}" data-sort="fit" aria-pressed="${st.sort==="fit"}">맞는 정도순</button>
+      <button class="btn ${st.sort==="near"?"":"ghost"}" data-sort="near" aria-pressed="${st.sort==="near"}" ${st.home?"":"disabled"}>집에서 가까운 순</button>
+      ${st.home?`<span class="small muted">${esc(homeLabel())}</span>`:`<button class="linkbtn small" id="setHome">집 위치 넣기</button>`}
+    </div>
+    ${st.sort==="near"&&st.home?`<p class="small muted" style="margin:8px 0 0">거리는 직선거리예요. 실제 통학 시간은 교통편에 따라 달라요.${DATA.schools.some(s=>s.lat==null)?" 일부 학교는 자치구 중심 기준의 대략 거리예요.":""}</p>`:""}
+    <div class="lines">${lines}</div>
+    <div class="panel others"><h3>그다음으로 잘 맞는 분야</h3><table>${others}</table></div>
+    <div class="row between noprint" style="margin-top:20px">
+      <button class="linkbtn" id="back">조건 다시 고르기</button>
+      <div class="row"><button class="btn ghost" id="restart">처음부터 다시</button>${ENV==="artifact"?"":`<button class="btn" id="print" data-focus>인쇄하기</button>`}</div>
+    </div>
+    <p class="small muted" style="margin-top:14px">학과와 정원은 2027학년도 서울특별시교육청 특성화고·마이스터고 입학전형 요강 기준이에요. 지원하기 전에 반드시 학교 누리집에서 최신 요강을 확인하세요. 졸업 후 진로는 대표적인 예시이고, 실제 취업은 학교의 취업 실적과 그해 채용 상황에 따라 달라요. 직업에 대해 더 알고 싶다면 <a href="https://www.career.go.kr" target="_blank" rel="noopener">커리어넷</a>에서 찾아보세요.</p>
+  </section>`;
+  app.querySelectorAll("[data-more]").forEach(b=>b.onclick=()=>{ const ex=b.closest(".line").querySelector(".extra"); ex.hidden=!ex.hidden; b.textContent=ex.hidden?b.textContent.replace("접기","더 보기"):b.textContent.replace("더 보기","접기"); });
+  app.querySelectorAll("[data-sort]").forEach(b=>b.onclick=()=>{ st.sort=b.dataset.sort; const y=window.scrollY; vRes(); window.scrollTo({top:y}); });
+  const sh=$("#setHome"); if(sh) sh.onclick=()=>go("x");
+  $("#back").onclick=()=>go("x");
+  $("#restart").onclick=e=>{ const b=e.currentTarget; if(!b.dataset.arm){ b.dataset.arm="1"; b.textContent="한 번 더 누르면 답이 모두 지워져요"; setTimeout(()=>{ if(b.isConnected){ delete b.dataset.arm; b.textContent="처음부터 다시"; } },4000); return; } { Object.assign(st,{name:"",a1:{},ah:{},ac:{},fav:[],ap:{},cond:{male:true,female:true,coed:true,meister:true},home:null,sort:"fit"}); go("start"); } };
+  if ($("#print")) $("#print").onclick=()=>{ app.querySelectorAll(".extra").forEach(e=>e.hidden=false); window.print(); };
+}
+
+/* ---------- settings dialog ---------- */
+const dlg=$("#setDlg");
+$("#openSet").onclick=()=>{ $("#sW").value=CFG.W; $("#sHi").value=CFG.hi; $("#sLo").value=CFG.lo; $("#sLow").value=CFG.low; dlg.showModal(); };
+$("#setCancel").onclick=()=>dlg.close();
+$("#setSave").onclick=()=>{ const n=id=>parseFloat($(id).value);
+  if(!isNaN(n("#sW"))) CFG.W=Math.min(.6,Math.max(0,n("#sW")));
+  if(!isNaN(n("#sHi"))) CFG.hi=n("#sHi"); if(!isNaN(n("#sLo"))) CFG.lo=n("#sLo"); if(!isNaN(n("#sLow"))) CFG.low=n("#sLow");
+  dlg.close(); render(); };
+
+$("#ver").textContent = `데이터 ${DATA.version}, 학교 ${DATA.schools.length}곳, 학과 ${DATA.depts.length}개`;
+render();
+</script>
+</body>
+</html>
