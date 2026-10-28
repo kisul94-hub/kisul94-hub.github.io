@@ -23,7 +23,7 @@ h2:not(:first-child){margin-top:20px}
 label{display:block;margin-bottom:12px;font-weight:600;font-size:14px}
 input[type=text],input:not([type]){display:block;width:100%;margin-top:5px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit}
 input:focus{outline:2px solid var(--pri);border-color:transparent}
-.fname{margin-top:6px;padding:10px;background:#f0f4ff;border-radius:8px;font-size:13px;color:var(--sub);word-break:break-all}
+.fname{margin-top:6px;padding:10px;background:#f0f4ff;border-radius:8px;font-size:13px;color:var(--sub);word-break:break-all;line-height:1.6}
 .fname b{color:var(--ink);font-size:14px}
 .btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 button{font-family:inherit;font-size:14px;padding:9px 14px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}
@@ -31,6 +31,8 @@ button:hover:not(:disabled){background:#f3f5f9}
 button:disabled{opacity:.45;cursor:not-allowed}
 button.primary{background:var(--pri);color:var(--pri-ink);border-color:var(--pri)}
 button.primary:hover:not(:disabled){background:#265fd0}
+button.add{background:#1a8f4c;color:#fff;border-color:#1a8f4c;font-weight:700}
+button.add:hover:not(:disabled){background:#157a40}
 button.big{font-size:16px;padding:12px 28px;font-weight:700}
 .hint{color:var(--sub);font-size:13px;margin:10px 0}
 #stage{position:relative;min-height:320px;border:2px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;background:#fafbfc;overflow:hidden}
@@ -40,13 +42,26 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
 #empty{color:var(--sub);text-align:center;line-height:1.7;padding:20px}
 #cropBar{margin-top:10px;font-size:13px;color:var(--sub)}
 #cropBar span{margin-right:auto}
+#tray{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fafbfc}
+.tray-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.tray-head .hint{margin:0}
+#thumbs{display:flex;flex-wrap:wrap;gap:10px;min-height:20px}
+#thumbs .none{color:var(--sub);font-size:13px}
+.thumb{position:relative;width:132px;height:92px;border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.thumb .x{position:absolute;top:4px;right:4px;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-size:13px;line-height:24px}
+.thumb .x:hover:not(:disabled){background:#d23b3b}
+.thumb .no{position:absolute;left:4px;bottom:4px;font-size:11px;background:rgba(255,255,255,.9);padding:1px 6px;border-radius:4px;color:var(--ink)}
+.thumb.sending{outline:3px solid var(--pri)}
+.thumb.err{outline:3px solid var(--bad)}
 #need{font-size:13px;color:var(--sub);margin-top:8px}
 .msg{margin-top:10px;font-size:14px;min-height:20px}
 .msg.good{color:var(--good);font-weight:700}.msg.bad{color:var(--bad);font-weight:600}
-#done{margin-top:12px;display:flex;gap:14px;align-items:center;padding:12px;border:1px solid #bfe3cc;background:#effaf3;border-radius:10px}
-#done img{width:140px;max-height:100px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px}
-#done .t{font-size:13px;color:var(--sub);line-height:1.6;word-break:break-all}
-#done .t b{color:var(--ink)}
+#done{margin-top:12px;padding:12px;border:1px solid #bfe3cc;background:#effaf3;border-radius:10px}
+#done .head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+#doneList{display:flex;flex-wrap:wrap;gap:10px}
+#doneList figure{margin:0;width:132px;font-size:11px;color:var(--sub);word-break:break-all}
+#doneList img{width:132px;height:92px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px;display:block;margin-bottom:3px}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -81,9 +96,9 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
       <button id="btnSnap" disabled>📸 지금 화면 캡처</button>
       <button id="btnStop" disabled>공유 중지</button>
       <button id="btnFile">📁 파일에서 고르기</button>
-      <input type="file" id="file" accept="image/*" hidden>
+      <input type="file" id="file" accept="image/*" multiple hidden>
     </div>
-    <p class="hint">또는 <b>Win + Shift + S</b>로 화면을 캡처한 뒤 이 페이지에서 <b>Ctrl + V</b>로 붙여 넣거나, 이미지 파일을 아래 칸에 끌어다 놓아도 됩니다.</p>
+    <p class="hint">또는 <b>Win + Shift + S</b>로 화면을 캡처한 뒤 이 페이지에서 <b>Ctrl + V</b>로 붙여 넣거나, 이미지 파일을 아래 칸에 끌어다 놓아도 됩니다(여러 개 가능).</p>
 
     <div id="stage">
       <video id="video" autoplay muted playsinline hidden></video>
@@ -93,7 +108,13 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
     <div class="btns" id="cropBar" hidden>
       <span id="cropInfo">마우스로 드래그하면 작품 부분만 잘라 낼 수 있습니다.</span>
       <button id="btnResetCrop">자르기 취소</button>
-      <button id="btnRetake">다시 캡처</button>
+      <button id="btnRetake">버리고 다시 캡처</button>
+      <button id="btnAdd" class="add">➕ 목록에 담기</button>
+    </div>
+
+    <div id="tray">
+      <div class="tray-head"><b>제출할 이미지 <span id="cnt">0</span>장</b><span class="hint">최대 10장 · 필요 없는 건 ✕로 빼기</span></div>
+      <div id="thumbs"></div>
     </div>
 
     <h2>3. 제출</h2>
@@ -101,13 +122,8 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
     <div id="need"></div>
     <div id="msg" class="msg"></div>
     <div id="done" hidden>
-      <img id="doneImg" alt="제출한 작품">
-      <div class="t">
-        <b>제출 완료</b><br>
-        파일명: <span id="doneName"></span><br>
-        시각: <span id="doneTime"></span><br>
-        <button id="btnNext" style="margin-top:6px">다른 작품 제출하기</button>
-      </div>
+      <div class="head"><b id="doneTitle">제출 완료</b><button id="btnNext">다른 작품 제출하기</button></div>
+      <div id="doneList"></div>
     </div>
   </section>
 </main>
@@ -116,17 +132,20 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
 /* ===== 설정 ===== */
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbypetRtth0m7v9au7-l2H0yJ6Y2mrxQ3pPYXsXjyr_MMh4IqzvVkMidN99gBT4EsrWN/exec',  // Apps Script 웹앱 주소
-  MAX_WIDTH: 0,                // 0 = 줄이지 않고 원본 픽셀 크기 그대로 저장
-  MAX_BYTES: 9.5 * 1024 * 1024 // 서버 한도(10MB)를 넘을 때만 JPEG로 압축(크기는 그대로)
+  MAX_WIDTH: 0,                 // 0 = 줄이지 않고 원본 픽셀 크기 그대로 저장
+  MAX_BYTES: 9.5 * 1024 * 1024, // 서버 한도(10MB)를 넘을 때만 JPEG로 압축(크기는 그대로)
+  MAX_ITEMS: 10                 // 한 번에 제출할 수 있는 최대 장수
 };
 const API = new URLSearchParams(location.search).get('api') || CONFIG.API_URL;
 
 /* ===== 공통 ===== */
 const $ = id => document.getElementById(id);
-const src = document.createElement('canvas');   // 캡처 원본(자르기 전)
+const src = document.createElement('canvas');   // 지금 편집 중인 캡처 원본(자르기 전)
 const cv = $('canvas');
 let hasImage = false, stream = null, crop = null, dragStart = null;
-let needCode = false, busy = false, lastUrl = null;
+let needCode = false, busy = false;
+let queue = [];      // 목록에 담긴 이미지 {blob, mime, url, multi?, part?, err?}
+let doneUrls = [];   // 제출 완료 썸네일 주소(다음 제출 때 정리)
 
 function clean(s, max = 40) {
   return String(s || '').replace(/[\\/:*?"<>|#%\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -135,6 +154,7 @@ function store(k, v) { try { localStorage.setItem('capTool_' + k, v); } catch (e
 function load(k) { try { return localStorage.getItem('capTool_' + k) || ''; } catch (e) { return ''; } }
 function msg(type, text) { $('msg').className = 'msg ' + (type || ''); $('msg').textContent = text || ''; }
 function setConn(type, text) { $('conn').className = type; $('conn').textContent = text; }
+function total() { return queue.length + (hasImage ? 1 : 0); }
 
 /* ===== 입력 ===== */
 $('sid').value = load('sid');
@@ -153,18 +173,27 @@ function problems() {
   if (!clean($('sname').value, 20)) p.push('이름');
   if (!clean($('title').value)) p.push('작품명');
   if (needCode && !$('code').value.trim()) p.push('수업 코드');
-  if (!hasImage) p.push('작품 화면 캡처');
+  if (!total()) p.push('작품 이미지');
+  if (total() > CONFIG.MAX_ITEMS) p.push(`이미지를 ${CONFIG.MAX_ITEMS}장 이하로`);
   return p;
 }
 function refresh() {
-  const sid = $('sid').value || '학번';
-  const n = clean($('sname').value, 20) || '이름';
-  const t = clean($('title').value) || '작품명';
-  $('fname').textContent = `${sid}_${n}_${t}.png`;
+  const base = `${$('sid').value || '학번'}_${clean($('sname').value, 20) || '이름'}_${clean($('title').value) || '작품명'}`;
+  const n = total();
+  $('fname').innerHTML = '';
+  $('fname').append('저장될 파일명', document.createElement('br'));
+  const b = document.createElement('b');
+  b.textContent = n > 1 ? `${base}_1.png ~ ${base}_${n}.png` : `${base}.png`;
+  $('fname').append(b);
+  if (n > 1) $('fname').append(document.createElement('br'), '(같은 작품명으로 전에 낸 것이 있으면 다음 번호부터 붙습니다)');
+
   const p = problems();
   $('btnSubmit').disabled = busy || p.length > 0 || !API;
+  $('btnSubmit').textContent = busy ? '올리는 중…' : (n > 1 ? `제출하기 (${n}장)` : '제출하기');
+  $('btnAdd').disabled = busy || !hasImage || queue.length >= CONFIG.MAX_ITEMS;
   $('need').textContent = !API ? '업로드 주소가 설정되지 않았습니다. 선생님께 알려 주세요.'
-    : (p.length ? '남은 항목: ' + p.join(', ') : '제출할 준비가 되었습니다.');
+    : (p.length ? '남은 항목: ' + p.join(', ')
+      : (hasImage && queue.length ? '지금 화면의 캡처도 목록과 함께 제출됩니다.' : '제출할 준비가 되었습니다.'));
 }
 
 /* ===== 서버 연결 확인 ===== */
@@ -194,9 +223,8 @@ function showLive() {
 function setImage() {
   hasImage = true; crop = null;
   $('video').hidden = true; $('empty').hidden = true; cv.hidden = false; $('cropBar').hidden = false;
-  $('done').hidden = true;
   draw(); refresh();
-  msg('', '필요하면 드래그해서 작품 부분만 잘라 낸 뒤 [제출하기]를 누르세요.');
+  msg('', '드래그로 작품 부분을 고른 뒤 [➕ 목록에 담기]를 누르세요. 한 장만 낼 거면 바로 [제출하기]를 눌러도 됩니다.');
 }
 function clearImage() {
   hasImage = false; crop = null;
@@ -222,8 +250,8 @@ $('btnShare').onclick = async () => {
     v.srcObject = stream;
     await v.play().catch(() => {});
     stream.getVideoTracks()[0].addEventListener('ended', stopShare);
-    hasImage = false; crop = null;
-    showLive(); refresh();
+    if (!hasImage) showLive(); else { $('btnSnap').disabled = false; $('btnStop').disabled = false; }
+    refresh();
     msg('', '틴커캐드에서 작품 각도를 맞춘 뒤 이 탭으로 돌아와 [지금 화면 캡처]를 누르세요.');
   } catch (e) {
     if (e.name !== 'NotAllowedError') msg('bad', '화면을 가져오지 못했습니다: ' + e.message);
@@ -246,33 +274,47 @@ function stopShare() {
 $('btnStop').onclick = stopShare;
 $('btnRetake').onclick = () => {
   clearImage();
-  if (!stream) msg('', '[틴커캐드 탭 선택]을 다시 누르거나, 새 캡처를 붙여 넣으세요.');
-  else msg('', '각도를 다시 맞춘 뒤 [지금 화면 캡처]를 누르세요.');
+  msg('', stream ? '각도를 다시 맞춘 뒤 [지금 화면 캡처]를 누르세요.' : '[틴커캐드 탭 선택]을 다시 누르거나, 새 캡처를 붙여 넣으세요.');
 };
 
 /* ===== 붙여넣기 / 끌어다 놓기 / 파일 ===== */
-async function loadBlob(b) {
+async function loadToSrc(b) {
+  const bmp = await createImageBitmap(b);
+  src.width = bmp.width; src.height = bmp.height;
+  src.getContext('2d').drawImage(bmp, 0, 0);
+  if (bmp.close) bmp.close();
+}
+async function loadBlob(b) {          // 한 장: 편집 화면으로
   if (!b || !b.type.startsWith('image/')) { msg('bad', '이미지 파일만 넣을 수 있습니다.'); return; }
-  try {
-    const bmp = await createImageBitmap(b);
-    src.width = bmp.width; src.height = bmp.height;
-    src.getContext('2d').drawImage(bmp, 0, 0);
-    if (bmp.close) bmp.close();
-    setImage();
-  } catch (e) { msg('bad', '이미지를 읽지 못했습니다.'); }
+  if (hasImage && !confirm('지금 화면의 캡처를 목록에 담지 않고 버릴까요?\n(담으려면 [취소] 후 [➕ 목록에 담기])')) return;
+  try { await loadToSrc(b); setImage(); } catch (e) { msg('bad', '이미지를 읽지 못했습니다.'); }
+}
+async function loadMany(files) {      // 여러 장: 바로 목록에 담기(자르기 없이 원본)
+  const imgs = files.filter(f => f.type.startsWith('image/'));
+  if (!imgs.length) { msg('bad', '이미지 파일만 넣을 수 있습니다.'); return; }
+  if (imgs.length === 1) return loadBlob(imgs[0]);
+  const keep = hasImage ? { w: src.width, h: src.height, data: src.getContext('2d').getImageData(0, 0, src.width, src.height), crop } : null;
+  let added = 0;
+  for (const f of imgs) {
+    if (queue.length >= CONFIG.MAX_ITEMS) break;
+    try { await loadToSrc(f); crop = null; await pushItem(); added++; } catch (e) {}
+  }
+  if (keep) { src.width = keep.w; src.height = keep.h; src.getContext('2d').putImageData(keep.data, 0, 0); crop = keep.crop; draw(); }
+  renderTray(); refresh();
+  msg(added < imgs.length ? 'bad' : '', `${added}장을 목록에 담았습니다.` + (added < imgs.length ? ` (${imgs.length - added}장은 최대 장수 초과나 오류로 빠짐)` : ''));
 }
 document.addEventListener('paste', e => {
   const items = Array.from((e.clipboardData && e.clipboardData.items) || []);
   const it = items.find(i => i.type.startsWith('image/'));
-  if (!it) return;
+  if (!it || busy) return;
   e.preventDefault();
   loadBlob(it.getAsFile());
 });
 ['dragenter', 'dragover'].forEach(t => window.addEventListener(t, e => { e.preventDefault(); $('stage').classList.add('drag'); }));
 ['dragleave', 'drop'].forEach(t => window.addEventListener(t, e => { e.preventDefault(); $('stage').classList.remove('drag'); }));
-window.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) loadBlob(f); });
+window.addEventListener('drop', e => { if (!busy && e.dataTransfer.files.length) loadMany(Array.from(e.dataTransfer.files)); });
 $('btnFile').onclick = () => $('file').click();
-$('file').onchange = () => { const f = $('file').files[0]; if (f) loadBlob(f); $('file').value = ''; };
+$('file').onchange = () => { const f = Array.from($('file').files); if (f.length) loadMany(f); $('file').value = ''; };
 
 /* ===== 자르기 ===== */
 function draw() {
@@ -290,9 +332,9 @@ function draw() {
     ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 2 * s; ctx.setLineDash([8 * s, 5 * s]);
     ctx.strokeRect(crop.x, crop.y, crop.w, crop.h);
     ctx.restore();
-    $('cropInfo').textContent = `자를 영역: ${Math.round(crop.w)} × ${Math.round(crop.h)} 픽셀`;
+    $('cropInfo').textContent = `자를 영역: ${Math.round(crop.w)} × ${Math.round(crop.h)} 픽셀 (원본 크기 그대로 저장)`;
   } else {
-    $('cropInfo').textContent = '마우스로 드래그하면 작품 부분만 잘라 낼 수 있습니다.';
+    $('cropInfo').textContent = `전체 ${src.width} × ${src.height} 픽셀 · 드래그하면 작품 부분만 잘라 낼 수 있습니다.`;
   }
 }
 function pt(e) {
@@ -302,7 +344,7 @@ function pt(e) {
     y: Math.max(0, Math.min(cv.height, (e.clientY - r.top) * cv.height / r.height))
   };
 }
-cv.addEventListener('pointerdown', e => { if (!hasImage) return; dragStart = pt(e); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerdown', e => { if (!hasImage || busy) return; dragStart = pt(e); cv.setPointerCapture(e.pointerId); });
 cv.addEventListener('pointermove', e => {
   if (!dragStart) return;
   const p = pt(e);
@@ -351,55 +393,123 @@ function toBase64(blob) {
   });
 }
 
+/* ===== 목록(트레이) ===== */
+async function pushItem() {
+  const { blob, mime } = await exportImage();
+  queue.push({ blob, mime, url: URL.createObjectURL(blob) });
+}
+async function addCurrent() {
+  if (!hasImage) return false;
+  if (queue.length >= CONFIG.MAX_ITEMS) { msg('bad', `한 번에 ${CONFIG.MAX_ITEMS}장까지만 담을 수 있습니다.`); return false; }
+  await pushItem();
+  clearImage(); renderTray();
+  return true;
+}
+$('btnAdd').onclick = async () => {
+  $('done').hidden = true;
+  if (await addCurrent()) {
+    msg('', `목록에 담았습니다 (${queue.length}장). 각도를 바꿔 더 캡처하거나 [제출하기]를 누르세요.`);
+  }
+};
+function renderTray() {
+  const box = $('thumbs');
+  box.innerHTML = '';
+  $('cnt').textContent = queue.length;
+  if (!queue.length) {
+    const s = document.createElement('span'); s.className = 'none';
+    s.textContent = '아직 담긴 이미지가 없습니다. 캡처한 뒤 [➕ 목록에 담기]를 누르세요.';
+    box.append(s);
+  }
+  queue.forEach((it, i) => {
+    const d = document.createElement('div');
+    d.className = 'thumb' + (it.err ? ' err' : '') + (it.sending ? ' sending' : '');
+    if (it.err) d.title = it.err;
+    const img = document.createElement('img'); img.src = it.url; img.alt = (i + 1) + '번 이미지';
+    const no = document.createElement('span'); no.className = 'no'; no.textContent = (i + 1) + '번';
+    const x = document.createElement('button'); x.className = 'x'; x.textContent = '✕'; x.title = '목록에서 빼기';
+    x.disabled = busy;
+    x.onclick = () => { URL.revokeObjectURL(it.url); queue.splice(i, 1); renderTray(); refresh(); };
+    d.append(img, no, x);
+    box.append(d);
+  });
+}
+
 /* ===== 제출 ===== */
 $('btnSubmit').onclick = async () => {
   if (busy || problems().length || !API) return;
-  busy = true; refresh();
-  $('btnSubmit').textContent = '올리는 중…';
-  msg('', '작품을 올리고 있습니다. 창을 닫지 마세요.');
+  busy = true;
   try {
-    const { blob, mime } = await exportImage();
-    const payload = {
+    if (hasImage) await addCurrent();
+    const multi = queue.length > 1 || queue.some(it => it.multi);
+    queue.forEach((it, i) => { if (it.multi === undefined) { it.multi = multi; it.part = i + 1; } it.err = ''; });
+    refresh(); renderTray();
+    doneUrls.forEach(u => URL.revokeObjectURL(u)); doneUrls = [];
+    $('doneList').innerHTML = '';
+
+    const info = {
       sid: $('sid').value,
       name: clean($('sname').value, 20),
       title: clean($('title').value),
-      code: $('code').value.trim(),
-      mime,
-      data: await toBase64(blob)
+      code: $('code').value.trim()
     };
-    const r = await fetch(API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    });
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || '알 수 없는 오류');
-    showDone(blob, j);
-    msg('good', '제출 완료! 선생님 드라이브에 저장되었습니다.');
+    const sent = [], all = queue.length;
+    let fail = '';
+    for (let i = 0; i < queue.length; i++) {
+      const it = queue[i];
+      it.sending = true; renderTray();
+      msg('', `${sent.length + 1} / ${all}장 올리는 중… 창을 닫지 마세요.`);
+      try {
+        const r = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(Object.assign({}, info, { mime: it.mime, multi: it.multi, part: it.part, data: await toBase64(it.blob) }))
+        });
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error || '알 수 없는 오류');
+        it.fileName = j.fileName;
+        sent.push(it);
+        queue.splice(i, 1); i--;
+      } catch (e) {
+        it.err = e.message; fail = e.message;
+        it.sending = false;
+        break;   // 학번·코드 오류는 나머지도 똑같이 실패하므로 멈춤
+      }
+    }
+    queue.forEach(it => it.sending = false);
+    if (sent.length) showDone(sent);
+    if (fail) msg('bad', `제출 실패: ${fail}` + (sent.length ? ` (${sent.length}장은 제출됨, 남은 ${queue.length}장은 목록에 그대로 있습니다)` : ' (다시 시도해 보세요)'));
+    else msg('good', `${sent.length}장 제출 완료! 선생님 드라이브에 저장되었습니다.`);
   } catch (e) {
-    msg('bad', '제출 실패: ' + e.message + ' (다시 시도해 보세요)');
+    msg('bad', '제출 실패: ' + e.message);
   } finally {
     busy = false;
-    $('btnSubmit').textContent = '제출하기';
-    refresh();
+    renderTray(); refresh();
   }
 };
-function showDone(blob, j) {
-  if (lastUrl) URL.revokeObjectURL(lastUrl);
-  lastUrl = URL.createObjectURL(blob);
-  $('doneImg').src = lastUrl;
-  $('doneName').textContent = j.fileName;
-  $('doneTime').textContent = new Date().toLocaleString('ko-KR');
+function showDone(list) {
+  const box = $('doneList');
+  list.forEach(it => {
+    doneUrls.push(it.url);
+    const f = document.createElement('figure');
+    const img = document.createElement('img'); img.src = it.url; img.alt = it.fileName;
+    const cap = document.createElement('figcaption'); cap.textContent = it.fileName;
+    f.append(img, cap); box.append(f);
+  });
+  $('doneTitle').textContent = `제출 완료 ${box.children.length}장 · ${new Date().toLocaleTimeString('ko-KR')}`;
   $('done').hidden = false;
 }
 $('btnNext').onclick = () => {
+  if (queue.length && !confirm('목록에 남은 이미지도 지울까요?')) return;
+  queue.forEach(it => URL.revokeObjectURL(it.url)); queue = [];
+  doneUrls.forEach(u => URL.revokeObjectURL(u)); doneUrls = [];
   $('title').value = '';
   $('done').hidden = true;
-  clearImage(); msg('', '');
+  clearImage(); renderTray(); msg('', '');
   $('title').focus();
 };
 
 /* ===== 시작 ===== */
+renderTray();
 refresh();
 checkServer();
 </script>
