@@ -13,6 +13,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-size:15px}
 header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:#1f2a44;color:#fff}
 header h1{margin:0;font-size:19px;font-weight:700}
+#ver{font-size:12px;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.18);font-weight:600}
 #conn{margin-left:auto;font-size:13px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.15)}
 #conn.good{background:#1a8f4c}#conn.bad{background:#d23b3b}#conn.warn{background:#c98a00}
 main{display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
@@ -62,12 +63,14 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
 #doneList{display:flex;flex-wrap:wrap;gap:10px}
 #doneList figure{margin:0;width:132px;font-size:11px;color:var(--sub);word-break:break-all}
 #doneList img{width:132px;height:92px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px;display:block;margin-bottom:3px}
+footer{max-width:1400px;margin:0 auto;padding:4px 16px 20px;text-align:center;color:var(--sub);font-size:12px;line-height:1.7}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <header>
   <h1>정보/기술 교과 캡쳐 도구</h1>
+  <span id="ver">V1.0</span>
   <span id="conn">연결 확인 중…</span>
 </header>
 
@@ -128,7 +131,13 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
   </section>
 </main>
 
+<footer>
+  정보/기술 교과 캡쳐 도구 <b>V1.0</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
+</footer>
+
 <script>
+/* 정보/기술 교과 캡쳐 도구 V1.0 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
+ * 버전 규칙: 수정할 때마다 0.01씩 올림 (V1.0 → V1.01 → V1.02 …) */
 /* ===== 설정 ===== */
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbypetRtth0m7v9au7-l2H0yJ6Y2mrxQ3pPYXsXjyr_MMh4IqzvVkMidN99gBT4EsrWN/exec',  // Apps Script 웹앱 주소
