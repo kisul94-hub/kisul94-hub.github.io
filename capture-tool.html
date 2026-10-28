@@ -75,13 +75,19 @@ label.chk input{width:16px;height:16px;margin:0}
 .slot .n{margin-left:4px;font-size:11px;opacity:.8}
 .slot.has:not(.cur){border-color:#9fd7b3;background:#effaf3;color:#157a40}
 .thumb select{position:absolute;left:4px;bottom:4px;max-width:96px;font-size:11px;padding:1px 2px;border-radius:4px;border:1px solid var(--line);background:rgba(255,255,255,.95)}
+#prog{margin-top:12px}
+.pbar{height:16px;background:#e8edf5;border-radius:999px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:var(--pri);border-radius:999px;transition:width .25s linear}
+#prog.ok .pbar i{background:var(--good)}#prog.fail .pbar i{background:var(--bad)}
+#progTxt{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-top:5px}
+#progTxt b{color:var(--ink)}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <header>
   <h1>정보/기술 교과 캡쳐 도구</h1>
-  <span id="ver">V1.04</span>
+  <span id="ver">V1.05</span>
   <span id="conn">연결 확인 중…</span>
 </header>
 
@@ -139,6 +145,7 @@ label.chk input{width:16px;height:16px;margin:0}
 
     <h2>3. 제출</h2>
     <button id="btnSubmit" class="primary big" disabled>제출하기</button>
+    <div id="prog" hidden><div class="pbar"><i id="progFill"></i></div><div id="progTxt"><span id="progL"></span><b id="progR"></b></div></div>
     <div id="need"></div>
     <div id="msg" class="msg"></div>
     <div id="done" hidden>
@@ -151,11 +158,11 @@ label.chk input{width:16px;height:16px;margin:0}
 <div id="flash" hidden></div>
 
 <footer>
-  정보/기술 교과 캡쳐 도구 <b>V1.04</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
+  정보/기술 교과 캡쳐 도구 <b>V1.05</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
 </footer>
 
 <script>
-/* 정보/기술 교과 캡쳐 도구 V1.04 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
+/* 정보/기술 교과 캡쳐 도구 V1.05 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
  * 버전 규칙: 수정할 때마다 0.01씩 올림 (V1.0 → V1.01 → V1.02 …) */
 /* ===== 설정 ===== */
 const CONFIG = {
@@ -585,15 +592,18 @@ $('btnSubmit').onclick = async () => {
     };
     const sent = [], all = queue.length;
     let fail = '';
+    progStart(all);
     for (let i = 0; i < queue.length; i++) {
       const it = queue[i];
       it.sending = true; renderTray();
       msg('', `${sent.length + 1} / ${all}장 올리는 중… 창을 닫지 마세요.`);
+      progFile(sent.length, it.blob.size);
       try {
         const body = JSON.stringify(Object.assign({}, info, { mime: it.mime, multi: it.multi, part: it.part, view: it.view || '', data: await toBase64(it.blob) }));
         const j = await postWithRetry(body, sent.length + 1, all);
         it.fileName = j.fileName;
         sent.push(it);
+        progDone(sent.length);
         queue.splice(i, 1); i--;
       } catch (e) {
         it.err = e.message; fail = e.message;
@@ -602,6 +612,7 @@ $('btnSubmit').onclick = async () => {
       }
     }
     queue.forEach(it => it.sending = false);
+    progEnd(!fail, sent.length);
     if (sent.length) showDone(sent);
     if (fail) msg('bad', `제출 실패: ${fail}` + (sent.length ? ` (${sent.length}장은 제출됨, 남은 ${queue.length}장은 목록에 그대로 있습니다)` : ' (다시 시도해 보세요)'));
     else msg('good', `${sent.length}장 제출 완료! 선생님 드라이브에 저장되었습니다.`);
@@ -614,6 +625,41 @@ $('btnSubmit').onclick = async () => {
   }
 };
 /* 제출이 몰려 서버가 '잠시 후'라고 하면 기다렸다가 자동으로 다시 보냄(최대 4번) */
+/* ===== 올리는 진행 막대 =====
+ * 브라우저가 구글로 보내는 바이트 수는 알 수 없어서(보안 규칙),
+ * 끝난 장수 + 지금 올리는 장의 예상 진행(크기÷예상 속도)으로 보여 줌 */
+let pg = { all: 0, done: 0, frac: 0, t0: 0, est: 1, timer: null, wait: '' };
+function progPaint() {
+  const pct = pg.all ? Math.min(100, Math.round((pg.done + pg.frac) / pg.all * 100)) : 0;
+  $('progFill').style.width = pct + '%';
+  $('progR').textContent = pct + '%';
+  $('progL').textContent = pg.wait || `${Math.min(pg.done + 1, pg.all)} / ${pg.all}장 올리는 중…`;
+}
+function progStart(all) {
+  pg = { all, done: 0, frac: 0, t0: 0, est: 1, timer: null, wait: '' };
+  $('prog').hidden = false; $('prog').className = '';
+  progPaint();
+}
+function progFile(done, bytes) {
+  pg.done = done; pg.frac = 0; pg.wait = '';
+  pg.t0 = Date.now();
+  pg.est = 1.5 + bytes / (300 * 1024);   // 약 300KB/초 + 구글 처리 1.5초로 어림
+  clearInterval(pg.timer);
+  pg.timer = setInterval(() => {
+    const t = (Date.now() - pg.t0) / 1000;
+    pg.frac = 0.95 * (1 - Math.exp(-t / pg.est));
+    progPaint();
+  }, 200);
+  progPaint();
+}
+function progDone(done) { pg.done = done; pg.frac = 0; progPaint(); }
+function progEnd(ok, done) {
+  clearInterval(pg.timer);
+  pg.done = done; pg.frac = 0; pg.wait = '';
+  $('prog').className = ok ? 'ok' : 'fail';
+  if (ok) { $('progFill').style.width = '100%'; $('progR').textContent = '100%'; $('progL').textContent = `${done}장 모두 올림 ✓`; }
+  else { progPaint(); $('progL').textContent = `${done} / ${pg.all}장 올림 — 실패한 장부터 다시 제출하세요`; }
+}
 async function postWithRetry(body, n, all) {
   for (let t = 0; ; t++) {
     let j = null, netErr = null;
@@ -626,7 +672,9 @@ async function postWithRetry(body, n, all) {
     if (t >= 4) throw new Error(j ? j.error : '인터넷 연결이 불안정합니다');
     const wait = 2000 * (t + 1) + Math.random() * 3000;
     msg('', `제출이 몰려서 잠시 기다리는 중… ${n} / ${all}장 (다시 시도 ${t + 1}/4) — 창을 닫지 마세요.`);
+    pg.wait = `제출이 몰려 기다리는 중 (다시 시도 ${t + 1}/4)`; progPaint();
     await new Promise(r => setTimeout(r, wait));
+    pg.wait = ''; pg.t0 = Date.now(); progPaint();
   }
 }
 function showDone(list) {
@@ -642,6 +690,7 @@ function showDone(list) {
   $('done').hidden = false;
 }
 $('btnNext').onclick = () => {
+  $('prog').hidden = true;
   if (queue.length && !confirm('목록에 남은 이미지도 지울까요?')) return;
   queue.forEach(it => URL.revokeObjectURL(it.url)); queue = [];
   doneUrls.forEach(u => URL.revokeObjectURL(u)); doneUrls = [];
