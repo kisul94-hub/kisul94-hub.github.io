@@ -59,8 +59,8 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
 <main>
   <section class="panel">
     <h2>1. 내 정보</h2>
-    <label>학번 (5자리)
-      <input id="sid" inputmode="numeric" maxlength="5" placeholder="예: 10305" autocomplete="off">
+    <label>학번 (4자리: 학년·반·번호)
+      <input id="sid" inputmode="numeric" maxlength="4" placeholder="예: 1101" autocomplete="off">
     </label>
     <label>이름
       <input id="sname" maxlength="20" placeholder="예: 홍길동" autocomplete="off">
@@ -140,7 +140,7 @@ function setConn(type, text) { $('conn').className = type; $('conn').textContent
 $('sid').value = load('sid');
 $('sname').value = load('sname');
 $('sid').addEventListener('input', () => {
-  $('sid').value = $('sid').value.replace(/\D/g, '').slice(0, 5);
+  $('sid').value = $('sid').value.replace(/\D/g, '').slice(0, 4);
   store('sid', $('sid').value); refresh();
 });
 $('sname').addEventListener('input', () => { store('sname', $('sname').value); refresh(); });
@@ -149,7 +149,7 @@ $('code').addEventListener('input', refresh);
 
 function problems() {
   const p = [];
-  if (!/^\d{5}$/.test($('sid').value)) p.push('학번 5자리');
+  if (!/^\d{4}$/.test($('sid').value)) p.push('학번 4자리');
   if (!clean($('sname').value, 20)) p.push('이름');
   if (!clean($('title').value)) p.push('작품명');
   if (needCode && !$('code').value.trim()) p.push('수업 코드');
