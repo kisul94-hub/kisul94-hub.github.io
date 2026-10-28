@@ -81,13 +81,21 @@ label.chk input{width:16px;height:16px;margin:0}
 #prog.ok .pbar i{background:var(--good)}#prog.fail .pbar i{background:var(--bad)}
 #progTxt{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-top:5px}
 #progTxt b{color:var(--ink)}
+#thumbs .board{width:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.box{border:2px dashed #cfd6e0;border-radius:10px;padding:6px 8px;min-height:100px;background:#fff;cursor:pointer}
+.box.un{grid-column:1/-1;background:#fafbfc}
+.box.over{border-color:var(--pri);background:#eef3ff}
+.box.full{border-style:solid;border-color:#9fd7b3}
+.box .bh{font-size:13px;font-weight:700;margin-bottom:6px}.box .bh small{font-weight:400;color:var(--sub);margin-left:6px}
+.box .bt{display:flex;flex-wrap:wrap;gap:6px}.box .ph{font-size:12px;color:#aab2bf;padding:12px 0}
+.thumb.sm{width:104px;height:72px;cursor:grab}.thumb.picked{outline:3px solid var(--pri)}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <header>
   <h1>정보/기술 교과 캡쳐 도구</h1>
-  <span id="ver">V1.05</span>
+  <span id="ver">V1.06</span>
   <span id="conn">연결 확인 중…</span>
 </header>
 
@@ -158,11 +166,11 @@ label.chk input{width:16px;height:16px;margin:0}
 <div id="flash" hidden></div>
 
 <footer>
-  정보/기술 교과 캡쳐 도구 <b>V1.05</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
+  정보/기술 교과 캡쳐 도구 <b>V1.06</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
 </footer>
 
 <script>
-/* 정보/기술 교과 캡쳐 도구 V1.05 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
+/* 정보/기술 교과 캡쳐 도구 V1.06 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
  * 버전 규칙: 수정할 때마다 0.01씩 올림 (V1.0 → V1.01 → V1.02 …) */
 /* ===== 설정 ===== */
 const CONFIG = {
@@ -253,7 +261,6 @@ async function checkServer() {
     if (!j.ok) throw new Error(j.error || '');
     needCode = !!j.needCode;
     slots = Array.isArray(j.slots) ? j.slots : [];
-    if (slots.length && !curSlot) curSlot = slots[0];
     renderSlots();
     $('codeWrap').hidden = !needCode;
     setConn(j.open ? 'good' : 'warn', j.open ? '제출 가능' : '제출 마감');
@@ -511,6 +518,11 @@ function renderSlots() {
   if (!slots.length) return;
   box.innerHTML = '';
   const l = document.createElement('b'); l.textContent = '담을 칸:'; box.append(l);
+  const u = document.createElement('button');
+  u.className = 'slot' + (curSlot === '' ? ' cur' : '');
+  u.textContent = '미지정 (나중에 배열)';
+  u.onclick = () => { curSlot = ''; renderSlots(); };
+  box.append(u);
   slots.forEach(v => {
     const c = document.createElement('button');
     const n = slotCount(v);
@@ -540,10 +552,53 @@ $('btnAdd').onclick = async () => {
     msg('', `목록에 담았습니다 (${queue.length}장).` + (stream ? ' 다음 장부터는 [⚡ 캡처해서 바로 담기]로 같은 범위를 한 번에 담을 수 있습니다.' : ' 더 넣거나 [제출하기]를 누르세요.'));
   }
 };
+let pickIdx = -1;   // 클릭으로 옮길 때 먼저 고른 사진
+function moveTo(i, v) {
+  if (busy || !queue[i]) return;
+  queue[i].view = v; pickIdx = -1;
+  renderTray(); renderSlots(); refresh();
+}
+function thumbEl(it, i) {
+  const d = document.createElement('div');
+  d.className = 'thumb sm' + (it.err ? ' err' : '') + (it.sending ? ' sending' : '') + (pickIdx === i ? ' picked' : '');
+  d.title = it.err || '끌어서 칸에 넣기 (또는 클릭한 뒤 넣을 칸을 클릭)';
+  d.draggable = !busy;
+  d.ondragstart = e => { e.dataTransfer.setData('text/plain', String(i)); e.dataTransfer.effectAllowed = 'move'; };
+  d.onclick = e => { e.stopPropagation(); if (busy) return; pickIdx = pickIdx === i ? -1 : i; renderTray(); };
+  const img = document.createElement('img'); img.src = it.url; img.alt = (i + 1) + '번 이미지'; img.draggable = false;
+  const no = document.createElement('span'); no.className = 'no'; no.textContent = (i + 1) + '번';
+  const x = document.createElement('button'); x.className = 'x'; x.textContent = '✕'; x.title = '목록에서 빼기';
+  x.disabled = busy;
+  x.onclick = e => { e.stopPropagation(); URL.revokeObjectURL(it.url); queue.splice(i, 1); pickIdx = -1; renderTray(); renderSlots(); refresh(); };
+  d.append(img, no, x);
+  return d;
+}
+function renderBoard(box) {
+  const board = document.createElement('div'); board.className = 'board';
+  [''].concat(slots).forEach(v => {
+    const items = queue.map((it, i) => [it, i]).filter(p => (p[0].view || '') === v);
+    const bx = document.createElement('div');
+    bx.className = 'box' + (v === '' ? ' un' : '') + (v && items.length ? ' full' : '');
+    const h = document.createElement('div'); h.className = 'bh';
+    h.textContent = (v ? (items.length ? '✓ ' : '') + v : '미지정') + (items.length ? ` · ${items.length}장` : '');
+    if (v === '') { const sm = document.createElement('small'); sm.textContent = '캡처한 사진이 여기 모입니다. 끌어서 아래 칸에 넣으세요.'; h.append(sm); }
+    const w = document.createElement('div'); w.className = 'bt';
+    items.forEach(p => w.append(thumbEl(p[0], p[1])));
+    if (!items.length) { const ph = document.createElement('div'); ph.className = 'ph'; ph.textContent = v ? '여기에 끌어 놓기' : '아직 사진이 없습니다'; w.append(ph); }
+    bx.append(h, w);
+    bx.ondragover = e => { e.preventDefault(); bx.classList.add('over'); };
+    bx.ondragleave = () => bx.classList.remove('over');
+    bx.ondrop = e => { e.preventDefault(); bx.classList.remove('over'); const i = parseInt(e.dataTransfer.getData('text/plain'), 10); if (!isNaN(i)) moveTo(i, v); };
+    bx.onclick = () => { if (pickIdx >= 0) moveTo(pickIdx, v); };
+    board.append(bx);
+  });
+  box.append(board);
+}
 function renderTray() {
   const box = $('thumbs');
   box.innerHTML = '';
   $('cnt').textContent = queue.length;
+  if (slots.length) { renderBoard(box); return; }
   if (!queue.length) {
     const s = document.createElement('span'); s.className = 'none';
     s.textContent = '아직 담긴 이미지가 없습니다. 캡처한 뒤 [➕ 목록에 담기]를 누르세요.';
@@ -575,6 +630,14 @@ function renderTray() {
 /* ===== 제출 ===== */
 $('btnSubmit').onclick = async () => {
   if (busy || problems().length || !API) return;
+  if (slots.length) {
+    const un = queue.filter(q => !q.view).length + (hasImage && !curSlot ? 1 : 0);
+    const empty = slots.filter(v => !queue.some(q => q.view === v) && !(hasImage && curSlot === v));
+    let warn = '';
+    if (un) warn += `칸을 정하지 않은 사진이 ${un}장 있습니다. 이 사진들은 _1, _2 … 번호로 저장됩니다.\n`;
+    if (empty.length) warn += `비어 있는 칸: ${empty.join(', ')}\n`;
+    if (warn && !confirm(warn + '\n그대로 제출할까요? (취소하면 사진을 끌어서 칸에 넣을 수 있습니다)')) return;
+  }
   busy = true;
   try {
     if (hasImage) await addCurrent();
@@ -620,7 +683,7 @@ $('btnSubmit').onclick = async () => {
     msg('bad', '제출 실패: ' + e.message);
   } finally {
     busy = false;
-    if (slots.length && !queue.length) curSlot = slots[0];
+    if (!queue.length) curSlot = '';
     renderTray(); renderSlots(); refresh();
   }
 };
@@ -694,7 +757,7 @@ $('btnNext').onclick = () => {
   if (queue.length && !confirm('목록에 남은 이미지도 지울까요?')) return;
   queue.forEach(it => URL.revokeObjectURL(it.url)); queue = [];
   doneUrls.forEach(u => URL.revokeObjectURL(u)); doneUrls = [];
-  if (slots.length) curSlot = slots[0];
+  curSlot = '';
   renderSlots();
   $('title').value = '';
   $('done').hidden = true;
