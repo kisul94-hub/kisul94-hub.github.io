@@ -75,7 +75,7 @@ label.chk input{width:16px;height:16px;margin:0}
 <body>
 <header>
   <h1>정보/기술 교과 캡쳐 도구</h1>
-  <span id="ver">V1.02</span>
+  <span id="ver">V1.03</span>
   <span id="conn">연결 확인 중…</span>
 </header>
 
@@ -144,11 +144,11 @@ label.chk input{width:16px;height:16px;margin:0}
 <div id="flash" hidden></div>
 
 <footer>
-  정보/기술 교과 캡쳐 도구 <b>V1.02</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
+  정보/기술 교과 캡쳐 도구 <b>V1.03</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
 </footer>
 
 <script>
-/* 정보/기술 교과 캡쳐 도구 V1.02 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
+/* 정보/기술 교과 캡쳐 도구 V1.03 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
  * 버전 규칙: 수정할 때마다 0.01씩 올림 (V1.0 → V1.01 → V1.02 …) */
 /* ===== 설정 ===== */
 const CONFIG = {
@@ -537,13 +537,8 @@ $('btnSubmit').onclick = async () => {
       it.sending = true; renderTray();
       msg('', `${sent.length + 1} / ${all}장 올리는 중… 창을 닫지 마세요.`);
       try {
-        const r = await fetch(API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(Object.assign({}, info, { mime: it.mime, multi: it.multi, part: it.part, data: await toBase64(it.blob) }))
-        });
-        const j = await r.json();
-        if (!j.ok) throw new Error(j.error || '알 수 없는 오류');
+        const body = JSON.stringify(Object.assign({}, info, { mime: it.mime, multi: it.multi, part: it.part, data: await toBase64(it.blob) }));
+        const j = await postWithRetry(body, sent.length + 1, all);
         it.fileName = j.fileName;
         sent.push(it);
         queue.splice(i, 1); i--;
@@ -564,6 +559,22 @@ $('btnSubmit').onclick = async () => {
     renderTray(); refresh();
   }
 };
+/* 제출이 몰려 서버가 '잠시 후'라고 하면 기다렸다가 자동으로 다시 보냄(최대 4번) */
+async function postWithRetry(body, n, all) {
+  for (let t = 0; ; t++) {
+    let j = null, netErr = null;
+    try {
+      const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
+      j = await r.json();
+    } catch (e) { netErr = e; }
+    if (j && j.ok) return j;
+    if (j && !j.busy) throw new Error(j.error || '알 수 없는 오류');   // 학번·코드 오류 등은 재시도해도 같음
+    if (t >= 4) throw new Error(j ? j.error : '인터넷 연결이 불안정합니다');
+    const wait = 2000 * (t + 1) + Math.random() * 3000;
+    msg('', `제출이 몰려서 잠시 기다리는 중… ${n} / ${all}장 (다시 시도 ${t + 1}/4) — 창을 닫지 마세요.`);
+    await new Promise(r => setTimeout(r, wait));
+  }
+}
 function showDone(list) {
   const box = $('doneList');
   list.forEach(it => {
