@@ -70,7 +70,7 @@ footer{max-width:1400px;margin:0 auto;padding:4px 16px 20px;text-align:center;co
 <body>
 <header>
   <h1>정보/기술 교과 캡쳐 도구</h1>
-  <span id="ver">V1.0</span>
+  <span id="ver">V1.01</span>
   <span id="conn">연결 확인 중…</span>
 </header>
 
@@ -132,11 +132,11 @@ footer{max-width:1400px;margin:0 auto;padding:4px 16px 20px;text-align:center;co
 </main>
 
 <footer>
-  정보/기술 교과 캡쳐 도구 <b>V1.0</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
+  정보/기술 교과 캡쳐 도구 <b>V1.01</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
 </footer>
 
 <script>
-/* 정보/기술 교과 캡쳐 도구 V1.0 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
+/* 정보/기술 교과 캡쳐 도구 V1.01 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
  * 버전 규칙: 수정할 때마다 0.01씩 올림 (V1.0 → V1.01 → V1.02 …) */
 /* ===== 설정 ===== */
 const CONFIG = {
@@ -166,7 +166,10 @@ function setConn(type, text) { $('conn').className = type; $('conn').textContent
 function total() { return queue.length + (hasImage ? 1 : 0); }
 
 /* ===== 입력 ===== */
-$('sid').value = load('sid');
+// 예전(5자리) 버전에서 기억해 둔 학번은 버림
+const savedSid = load('sid');
+$('sid').value = /^\d{4}$/.test(savedSid) ? savedSid : '';
+if (savedSid && !/^\d{4}$/.test(savedSid)) store('sid', '');
 $('sname').value = load('sname');
 $('sid').addEventListener('input', () => {
   $('sid').value = $('sid').value.replace(/\D/g, '').slice(0, 4);
