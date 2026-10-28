@@ -116,8 +116,8 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
 /* ===== 설정 ===== */
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbypetRtth0m7v9au7-l2H0yJ6Y2mrxQ3pPYXsXjyr_MMh4IqzvVkMidN99gBT4EsrWN/exec',  // Apps Script 웹앱 주소
-  MAX_WIDTH: 1920,             // 이보다 넓은 이미지는 줄여서 저장
-  MAX_BYTES: 4 * 1024 * 1024   // PNG가 이보다 크면 JPEG로 압축
+  MAX_WIDTH: 0,                // 0 = 줄이지 않고 원본 픽셀 크기 그대로 저장
+  MAX_BYTES: 9.5 * 1024 * 1024 // 서버 한도(10MB)를 넘을 때만 JPEG로 압축(크기는 그대로)
 };
 const API = new URLSearchParams(location.search).get('api') || CONFIG.API_URL;
 
@@ -320,18 +320,22 @@ $('btnResetCrop').onclick = () => { crop = null; draw(); };
 /* ===== 이미지 만들기 ===== */
 function toBlobP(c, type, q) { return new Promise(r => c.toBlob(r, type, q)); }
 async function exportImage() {
-  const r = crop || { x: 0, y: 0, w: src.width, h: src.height };
-  const k = Math.min(1, CONFIG.MAX_WIDTH / r.w);
+  // 화면에 작게 보여도 좌표는 원본 픽셀 기준. 정수로 맞춰 번짐 없이 그대로 잘라 냄
+  const c = crop || { x: 0, y: 0, w: src.width, h: src.height };
+  const x = Math.round(c.x), y = Math.round(c.y);
+  const r = { x, y, w: Math.min(src.width - x, Math.round(c.w)), h: Math.min(src.height - y, Math.round(c.h)) };
+  const k = CONFIG.MAX_WIDTH ? Math.min(1, CONFIG.MAX_WIDTH / r.w) : 1;
   const out = document.createElement('canvas');
   out.width = Math.round(r.w * k); out.height = Math.round(r.h * k);
   const ctx = out.getContext('2d');
+  ctx.imageSmoothingEnabled = k < 1;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, out.width, out.height);
   let blob = await toBlobP(out, 'image/png'), mime = 'image/png';
   if (blob.size > CONFIG.MAX_BYTES) {
     ctx.globalCompositeOperation = 'destination-over';
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, out.width, out.height);
-    for (const q of [0.9, 0.8, 0.65]) {
+    for (const q of [0.95, 0.9, 0.8, 0.65]) {
       blob = await toBlobP(out, 'image/jpeg', q); mime = 'image/jpeg';
       if (blob.size <= CONFIG.MAX_BYTES) break;
     }
