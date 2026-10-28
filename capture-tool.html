@@ -89,13 +89,23 @@ label.chk input{width:16px;height:16px;margin:0}
 .box .bh{font-size:13px;font-weight:700;margin-bottom:6px}.box .bh small{font-weight:400;color:var(--sub);margin-left:6px}
 .box .bt{display:flex;flex-wrap:wrap;gap:6px}.box .ph{font-size:12px;color:#aab2bf;padding:12px 0}
 .thumb.sm{width:104px;height:72px;cursor:grab}.thumb.picked{outline:3px solid var(--pri)}
+#pick{position:fixed;inset:0;z-index:20;background:rgba(15,20,30,.45);display:flex;align-items:center;justify-content:center}
+.pk{background:#fff;border-radius:14px;padding:18px;display:flex;gap:18px;align-items:flex-start;width:min(720px,94vw);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.pk img{width:240px;height:170px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fafbfc;flex:none}
+.pk .q{font-size:17px;font-weight:700}.pk .q small{display:block;font-size:12px;font-weight:400;color:var(--sub);margin-top:3px}
+#pkBtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+#pkBtns button{padding:12px 6px;font-size:15px;font-weight:700;text-align:center}
+#pkBtns button .k{display:block;font-size:11px;font-weight:400;color:var(--sub)}
+#pkBtns button.sug{background:var(--pri);color:#fff;border-color:var(--pri)}#pkBtns button.sug .k{color:#dfe8ff}
+#pkBtns button.has:not(.sug){background:#effaf3;border-color:#9fd7b3}
+@media (max-width:600px){.pk{flex-direction:column}.pk img{width:100%}}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <header>
   <h1>정보/기술 교과 캡쳐 도구</h1>
-  <span id="ver">V1.06</span>
+  <span id="ver">V1.07</span>
   <span id="conn">연결 확인 중…</span>
 </header>
 
@@ -164,13 +174,23 @@ label.chk input{width:16px;height:16px;margin:0}
 </main>
 
 <div id="flash" hidden></div>
+<div id="pick" hidden>
+  <div class="pk">
+    <img id="pkImg" alt="방금 담은 사진">
+    <div style="flex:1">
+      <div class="q">이 사진은 어느 칸인가요?<small>숫자 키(1~9)로도 고를 수 있습니다 · 파란 칸이 아직 비어 있는 다음 칸</small></div>
+      <div id="pkBtns"></div>
+      <button id="pkLater">나중에 정하기 (미지정)</button>
+    </div>
+  </div>
+</div>
 
 <footer>
-  정보/기술 교과 캡쳐 도구 <b>V1.06</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
+  정보/기술 교과 캡쳐 도구 <b>V1.07</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
 </footer>
 
 <script>
-/* 정보/기술 교과 캡쳐 도구 V1.06 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
+/* 정보/기술 교과 캡쳐 도구 V1.07 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
  * 버전 규칙: 수정할 때마다 0.01씩 올림 (V1.0 → V1.01 → V1.02 …) */
 /* ===== 설정 ===== */
 const CONFIG = {
@@ -402,7 +422,7 @@ async function loadMany(files) {      // 여러 장: 바로 목록에 담기(자
   let added = 0;
   for (const f of imgs) {
     if (queue.length >= CONFIG.MAX_ITEMS) break;
-    try { await loadToSrc(f); crop = null; await pushItem(); added++; } catch (e) {}
+    try { await loadToSrc(f); crop = null; await pushItem(true); added++; } catch (e) {}
   }
   if (keep) { src.width = keep.w; src.height = keep.h; src.getContext('2d').putImageData(keep.data, 0, 0); crop = keep.crop; draw(); }
   renderTray(); refresh();
@@ -499,10 +519,11 @@ function toBase64(blob) {
 }
 
 /* ===== 목록(트레이) ===== */
-async function pushItem() {
+async function pushItem(noPick) {
   const { blob, mime } = await exportImage();
   const view = slots.length ? curSlot : '';
   queue.push({ blob, mime, view, url: URL.createObjectURL(blob) });
+  if (slots.length && !view && !noPick) setTimeout(() => openPick(queue.length - 1), 50);   // 담자마자 칸 고르기
   if (view) {   // 다음 빈 칸으로 자동 이동(모두 찼으면 그대로)
     const i = slots.indexOf(view);
     const next = slots.slice(i + 1).concat(slots.slice(0, i)).find(v => !queue.some(q => q.view === v));
@@ -626,6 +647,41 @@ function renderTray() {
     box.append(d);
   });
 }
+
+/* ===== 담자마자 '어느 칸?' 고르기 ===== */
+let pickFor = -1;
+function openPick(i) {
+  if (!queue[i] || busy) return;
+  pickFor = i;
+  $('pkImg').src = queue[i].url;
+  const sug = slots.find(v => !queue.some(q => q.view === v));
+  const box = $('pkBtns'); box.innerHTML = '';
+  slots.forEach((v, k) => {
+    const n = slotCount(v);
+    const b = document.createElement('button');
+    b.className = (v === sug ? 'sug' : '') + (n ? ' has' : '');
+    b.append(v);
+    const sm = document.createElement('span'); sm.className = 'k'; sm.textContent = (k < 9 ? (k + 1) + '번 키' : '') + (n ? ` · 이미 ${n}장` : '');
+    b.append(sm);
+    b.onclick = () => choosePick(v);
+    box.append(b);
+  });
+  $('pick').hidden = false;
+}
+function choosePick(v) {
+  if (pickFor >= 0 && queue[pickFor]) queue[pickFor].view = v;
+  pickFor = -1; $('pick').hidden = true;
+  renderTray(); renderSlots(); refresh();
+  flash(v ? `📸 '${v}' 칸에 넣었습니다` : '미지정으로 두었습니다 — 나중에 끌어서 칸에 넣으세요');
+}
+$('pkLater').onclick = () => choosePick('');
+$('pick').onclick = e => { if (e.target === $('pick')) choosePick(''); };
+document.addEventListener('keydown', e => {
+  if ($('pick').hidden) return;
+  if (e.key === 'Escape') { e.preventDefault(); choosePick(''); return; }
+  const d = parseInt(e.key, 10);
+  if (d >= 1 && d <= Math.min(9, slots.length)) { e.preventDefault(); choosePick(slots[d - 1]); }
+});
 
 /* ===== 제출 ===== */
 $('btnSubmit').onclick = async () => {
