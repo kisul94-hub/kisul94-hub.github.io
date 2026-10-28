@@ -64,13 +64,18 @@ button.big{font-size:16px;padding:12px 28px;font-weight:700}
 #doneList figure{margin:0;width:132px;font-size:11px;color:var(--sub);word-break:break-all}
 #doneList img{width:132px;height:92px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px;display:block;margin-bottom:3px}
 footer{max-width:1400px;margin:0 auto;padding:4px 16px 20px;text-align:center;color:var(--sub);font-size:12px;line-height:1.7}
+.opts{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:10px;padding:8px 12px;background:#f0f4ff;border-radius:8px}
+label.chk{display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;font-size:13px;cursor:pointer}
+label.chk input{width:16px;height:16px;margin:0}
+#cropMem{color:var(--sub)}
+#flash{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:#1a8f4c;color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:9;transition:opacity .3s}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <header>
   <h1>정보/기술 교과 캡쳐 도구</h1>
-  <span id="ver">V1.01</span>
+  <span id="ver">V1.02</span>
   <span id="conn">연결 확인 중…</span>
 </header>
 
@@ -96,17 +101,22 @@ footer{max-width:1400px;margin:0 auto;padding:4px 16px 20px;text-align:center;co
     <h2>2. 작품 화면 가져오기</h2>
     <div class="btns">
       <button id="btnShare" class="primary">🖥️ 틴커캐드 탭 선택</button>
-      <button id="btnSnap" disabled>📸 지금 화면 캡처</button>
+      <button id="btnSnap" disabled>📸 캡처해서 자르기</button>
+      <button id="btnQuick" class="add" disabled>⚡ 캡처해서 바로 담기</button>
       <button id="btnStop" disabled>공유 중지</button>
       <button id="btnFile">📁 파일에서 고르기</button>
       <input type="file" id="file" accept="image/*" multiple hidden>
+    </div>
+    <div class="opts" id="opts" hidden>
+      <label class="chk"><input type="checkbox" id="optCrop" checked> 바로 담을 때 마지막으로 정한 범위로 자르기 <span id="cropMem">(아직 정한 범위 없음)</span></label>
+      <label class="chk"><input type="checkbox" id="optAuto"> 틴커캐드에서 이 탭으로 돌아오면 자동으로 바로 담기</label>
     </div>
     <p class="hint">또는 <b>Win + Shift + S</b>로 화면을 캡처한 뒤 이 페이지에서 <b>Ctrl + V</b>로 붙여 넣거나, 이미지 파일을 아래 칸에 끌어다 놓아도 됩니다(여러 개 가능).</p>
 
     <div id="stage">
       <video id="video" autoplay muted playsinline hidden></video>
       <canvas id="canvas" hidden></canvas>
-      <div id="empty">여기에 작품 화면이 나타납니다.<br>[틴커캐드 탭 선택] → 틴커캐드 탭 고르기 → [공유]</div>
+      <div id="empty">여기에 작품 화면이 나타납니다.<br>[틴커캐드 탭 선택] → 틴커캐드 탭 고르기 → [공유]<br>공유하는 동안 틴커캐드 화면이 여기에 실시간으로 보입니다.</div>
     </div>
     <div class="btns" id="cropBar" hidden>
       <span id="cropInfo">마우스로 드래그하면 작품 부분만 잘라 낼 수 있습니다.</span>
@@ -131,12 +141,14 @@ footer{max-width:1400px;margin:0 auto;padding:4px 16px 20px;text-align:center;co
   </section>
 </main>
 
+<div id="flash" hidden></div>
+
 <footer>
-  정보/기술 교과 캡쳐 도구 <b>V1.01</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
+  정보/기술 교과 캡쳐 도구 <b>V1.02</b> · 제작: 혜원여자중학교 정보·기술 교사 그라디우스 · 2026. 10.
 </footer>
 
 <script>
-/* 정보/기술 교과 캡쳐 도구 V1.01 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
+/* 정보/기술 교과 캡쳐 도구 V1.02 — 제작: 혜원여자중학교 정보·기술 교사 그라디우스
  * 버전 규칙: 수정할 때마다 0.01씩 올림 (V1.0 → V1.01 → V1.02 …) */
 /* ===== 설정 ===== */
 const CONFIG = {
@@ -155,6 +167,7 @@ let hasImage = false, stream = null, crop = null, dragStart = null;
 let needCode = false, busy = false;
 let queue = [];      // 목록에 담긴 이미지 {blob, mime, url, multi?, part?, err?}
 let doneUrls = [];   // 제출 완료 썸네일 주소(다음 제출 때 정리)
+let lastCrop = null; // 마지막으로 담을 때 정한 자르기 범위 {x,y,w,h,sw,sh}
 
 function clean(s, max = 40) {
   return String(s || '').replace(/[\\/:*?"<>|#%\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -203,6 +216,8 @@ function refresh() {
   $('btnSubmit').disabled = busy || p.length > 0 || !API;
   $('btnSubmit').textContent = busy ? '올리는 중…' : (n > 1 ? `제출하기 (${n}장)` : '제출하기');
   $('btnAdd').disabled = busy || !hasImage || queue.length >= CONFIG.MAX_ITEMS;
+  $('btnQuick').disabled = busy || !stream || queue.length >= CONFIG.MAX_ITEMS;
+  $('opts').hidden = !stream;
   $('need').textContent = !API ? '업로드 주소가 설정되지 않았습니다. 선생님께 알려 주세요.'
     : (p.length ? '남은 항목: ' + p.join(', ')
       : (hasImage && queue.length ? '지금 화면의 캡처도 목록과 함께 제출됩니다.' : '제출할 준비가 되었습니다.'));
@@ -264,29 +279,75 @@ $('btnShare').onclick = async () => {
     stream.getVideoTracks()[0].addEventListener('ended', stopShare);
     if (!hasImage) showLive(); else { $('btnSnap').disabled = false; $('btnStop').disabled = false; }
     refresh();
-    msg('', '틴커캐드에서 작품 각도를 맞춘 뒤 이 탭으로 돌아와 [지금 화면 캡처]를 누르세요.');
+    msg('', '틴커캐드에서 각도를 맞춘 뒤 이 탭으로 돌아와 [📸 캡처해서 자르기]로 첫 장의 범위를 정해 담고, 그다음부터는 [⚡ 캡처해서 바로 담기]를 누르세요.');
   } catch (e) {
     if (e.name !== 'NotAllowedError') msg('bad', '화면을 가져오지 못했습니다: ' + e.message);
   }
 };
-$('btnSnap').onclick = () => {
+function grabFrame() {
   const v = $('video');
-  if (!v.videoWidth) { msg('bad', '아직 화면이 준비되지 않았습니다. 잠시 후 다시 눌러 주세요.'); return; }
+  if (!v.videoWidth) { msg('bad', '아직 화면이 준비되지 않았습니다. 잠시 후 다시 눌러 주세요.'); return false; }
   src.width = v.videoWidth; src.height = v.videoHeight;
   src.getContext('2d').drawImage(v, 0, 0);
-  setImage();
+  return true;
+}
+$('btnSnap').onclick = () => {
+  if (hasImage && !confirm('지금 자르던 캡처를 담지 않고 버릴까요?')) return;
+  if (grabFrame()) setImage();
 };
+
+/* 캡처해서 바로 담기: 편집 화면 없이 곧바로 목록에 추가(실시간 화면 유지) */
+let quickBusy = false;
+async function quickAdd(auto) {
+  if (quickBusy || busy || !stream) return;
+  if (hasImage) { if (!auto) msg('bad', '자르던 캡처를 먼저 [➕ 목록에 담기] 하거나 [버리고 다시 캡처]를 누르세요.'); return; }
+  if (queue.length >= CONFIG.MAX_ITEMS) { msg('bad', `한 번에 ${CONFIG.MAX_ITEMS}장까지만 담을 수 있습니다. 먼저 제출하세요.`); return; }
+  quickBusy = true;
+  try {
+    if (!grabFrame()) return;
+    const lc = lastCrop;
+    crop = ($('optCrop').checked && lc && lc.sw === src.width && lc.sh === src.height)
+      ? { x: lc.x, y: lc.y, w: lc.w, h: lc.h } : null;
+    await pushItem();
+    crop = null;
+    $('done').hidden = true;
+    renderTray(); refresh();
+    flash(`📸 ${queue.length}번째 이미지를 담았습니다`);
+    msg('', `${queue.length}장 담김. 틴커캐드에서 각도를 바꾸고 다시 [⚡ 캡처해서 바로 담기]를 누르세요.`);
+  } finally { quickBusy = false; }
+}
+$('btnQuick').onclick = () => quickAdd(false);
+
+/* 틴커캐드 탭에서 이 탭으로 돌아오면 자동으로 담기 */
+let lastAuto = 0;
+function autoBack() {
+  if (!$('optAuto').checked || !stream || document.visibilityState !== 'visible') return;
+  if (Date.now() - lastAuto < 1500) return;
+  lastAuto = Date.now();
+  setTimeout(() => quickAdd(true), 400);   // 화면이 최신 장면으로 바뀔 시간을 잠깐 줌
+}
+document.addEventListener('visibilitychange', autoBack);
+window.addEventListener('focus', autoBack);
+
+let flashTimer = null;
+function flash(text) {
+  const f = $('flash');
+  f.textContent = text; f.hidden = false; f.style.opacity = 1;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { f.style.opacity = 0; setTimeout(() => f.hidden = true, 300); }, 1400);
+}
 function stopShare() {
   if (stream) stream.getTracks().forEach(t => t.stop());
   stream = null;
   $('video').srcObject = null;
   $('btnSnap').disabled = true; $('btnStop').disabled = true;
   if (!hasImage) showEmpty();
+  refresh();
 }
 $('btnStop').onclick = stopShare;
 $('btnRetake').onclick = () => {
   clearImage();
-  msg('', stream ? '각도를 다시 맞춘 뒤 [지금 화면 캡처]를 누르세요.' : '[틴커캐드 탭 선택]을 다시 누르거나, 새 캡처를 붙여 넣으세요.');
+  msg('', stream ? '각도를 다시 맞춘 뒤 [📸 캡처해서 자르기] 또는 [⚡ 캡처해서 바로 담기]를 누르세요.' : '[틴커캐드 탭 선택]을 다시 누르거나, 새 캡처를 붙여 넣으세요.');
 };
 
 /* ===== 붙여넣기 / 끌어다 놓기 / 파일 ===== */
@@ -413,6 +474,10 @@ async function pushItem() {
 async function addCurrent() {
   if (!hasImage) return false;
   if (queue.length >= CONFIG.MAX_ITEMS) { msg('bad', `한 번에 ${CONFIG.MAX_ITEMS}장까지만 담을 수 있습니다.`); return false; }
+  if (crop) {
+    lastCrop = { x: crop.x, y: crop.y, w: crop.w, h: crop.h, sw: src.width, sh: src.height };
+    $('cropMem').textContent = `(${Math.round(crop.w)} × ${Math.round(crop.h)} 범위 기억됨)`;
+  }
   await pushItem();
   clearImage(); renderTray();
   return true;
@@ -420,7 +485,8 @@ async function addCurrent() {
 $('btnAdd').onclick = async () => {
   $('done').hidden = true;
   if (await addCurrent()) {
-    msg('', `목록에 담았습니다 (${queue.length}장). 각도를 바꿔 더 캡처하거나 [제출하기]를 누르세요.`);
+    flash(`📸 ${queue.length}번째 이미지를 담았습니다`);
+    msg('', `목록에 담았습니다 (${queue.length}장).` + (stream ? ' 다음 장부터는 [⚡ 캡처해서 바로 담기]로 같은 범위를 한 번에 담을 수 있습니다.' : ' 더 넣거나 [제출하기]를 누르세요.'));
   }
 };
 function renderTray() {
