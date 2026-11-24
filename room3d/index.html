@@ -420,34 +420,50 @@ async function checkSupport(){
   } catch(e){ el.textContent = '⚠️ 지원 확인 실패: ' + e.message; }
 }
 
+let starting = false, arStep = '';
+$('overlay').addEventListener('beforexrselect', e => e.preventDefault()); // 버튼 누름이 '찍기'로 처리되지 않게
+function arFail(e){
+  const msg = `AR 시작 실패 (${arStep}): ${e && e.message || e}`;
+  $('support').innerHTML = '⚠️ ' + msg + '<br>크롬을 완전히 닫았다가 다시 열고 시도해 보세요.';
+  toast('AR 시작 실패');
+  console.error(msg, e);
+}
 async function startAR(){
-  if (xrSession) return;
+  if (xrSession || starting) return;          // 두 번 눌러도 한 번만
+  starting = true; $('startAR').disabled = true; $('backAR').disabled = true;
   if (inViewer){ inViewer = false; labelMul = 1; rebuildRoom(); }
+  let session = null;
   try {
-    xrSession = await navigator.xr.requestSession('immersive-ar', {
-      requiredFeatures: ['hit-test', 'local-floor'],
-      optionalFeatures: ['dom-overlay', 'plane-detection'],
-      domOverlay: { root: $('overlay') }
-    });
+    arStep = '세션 요청';
+    const opts = { requiredFeatures:['hit-test'], optionalFeatures:['dom-overlay','plane-detection'], domOverlay:{ root:$('overlay') } };
+    try { session = await navigator.xr.requestSession('immersive-ar', opts); }
+    catch(e){
+      if (e.name !== 'NotSupportedError') throw e;
+      arStep = '기본 세션 요청';
+      session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures:['hit-test'] });
+    }
+    xrSession = session;
+    session.addEventListener('end', onSessionEnd);
+    session.addEventListener('select', placeHere);
+    planeSupported = !!(session.enabledFeatures && session.enabledFeatures.includes('plane-detection'));
+    arStep = '렌더러 연결';
+    renderer.xr.setReferenceSpaceType('local');
+    await renderer.xr.setSession(session);
+    refSpace = renderer.xr.getReferenceSpace();
+    arStep = '시점 공간';
+    viewerSpace = await session.requestReferenceSpace('viewer');
+    arStep = '바닥 인식(hit-test)';
+    hitSource = await session.requestHitTestSource({ space: viewerSpace });
   } catch(e){
-    try {
-      xrSession = await navigator.xr.requestSession('immersive-ar', { requiredFeatures:['hit-test'], optionalFeatures:['dom-overlay','plane-detection'], domOverlay:{ root:$('overlay') } });
-    } catch(e2){ toast('AR 시작 실패: ' + e2.message); xrSession = null; return; }
+    arFail(e);
+    if (session){ pendingViewer = false; try { await session.end(); } catch(_){} }
+    xrSession = null; starting = false; $('startAR').disabled = false; $('backAR').disabled = false;
+    return;
   }
-  planeSupported = !!(xrSession.enabledFeatures && xrSession.enabledFeatures.includes('plane-detection'));
-  renderer.xr.setReferenceSpaceType(xrSession.enabledFeatures && xrSession.enabledFeatures.includes('local-floor') ? 'local-floor' : 'local');
-  await renderer.xr.setSession(xrSession);
-  refSpace = renderer.xr.getReferenceSpace();
-  viewerSpace = await xrSession.requestReferenceSpace('viewer');
-  hitSource = await xrSession.requestHitTestSource({ space: viewerSpace });
-  // 오버레이 버튼을 누를 때 화면 탭(select)으로 처리되지 않게
-  $('overlay').addEventListener('beforexrselect', e => e.preventDefault());
-  // 화면 빈 곳을 탭해도 찍기
-  xrSession.addEventListener('select', placeHere);
-  xrSession.addEventListener('end', onSessionEnd);
+  starting = false; $('startAR').disabled = false; $('backAR').disabled = false;
   $('intro').style.display = 'none'; $('viewer').classList.remove('show');
   $('overlay').classList.add('show'); gridHelper.visible = false;
-  if (!planeSupported){ $('planes').disabled = true; $('planes').classList.remove('on'); }
+  $('planes').disabled = !planeSupported; $('planes').classList.toggle('on', planeSupported && showPlanes);
   renderer.setAnimationLoop(onXRFrame);
   updateHint();
   if (!planeSupported) setTimeout(() => toast('면 자동 표시는 이 기기에서 꺼져 있어요'), 800);
