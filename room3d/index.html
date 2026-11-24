@@ -90,7 +90,9 @@
     <button id="startAR" class="big" disabled>AR 시작</button>
     <button id="demo">예시 교실 보기</button>
   </div>
-  <div class="credit">제작 박병규 · Three.js(MIT) 내장 · 인터넷 연결 없이 동작</div>
+  <button id="simpleAR" style="display:none">간단 모드로 다시 시도</button>
+  <div id="log" style="display:none;font:12px/1.6 ui-monospace,monospace;color:#cbd5e1;background:#0b0f14;border:1px solid var(--line);border-radius:10px;padding:8px 10px;white-space:pre-wrap;word-break:break-all"></div>
+  <div class="credit">제작 박병규 · Three.js(MIT) 내장 · 인터넷 연결 없이 동작 · 버전 v3 (11/25)</div>
 </section>
 
 <div id="overlay">
@@ -420,9 +422,23 @@ async function checkSupport(){
   } catch(e){ el.textContent = '⚠️ 지원 확인 실패: ' + e.message; }
 }
 
-let starting = false, arStep = '';
+let starting = false, arStep = '', simpleMode = false, watchdog = null;
+const t0 = performance.now();
+function log(msg){ const el = $('log'); el.style.display = 'block'; el.textContent += `[${((performance.now()-t0)/1000).toFixed(1)}s] ${msg}\n`; }
+function step(name){
+  arStep = name; log(name + ' …'); clearTimeout(watchdog);
+  watchdog = setTimeout(() => {
+    if (!starting) return;
+    log(`⚠️ '${name}' 단계에서 10초 넘게 응답이 없어요`);
+    $('support').innerHTML = `⚠️ <b>${name}</b> 단계에서 멈췄어요. 크롬을 완전히 닫고 다시 열거나, 아래 [간단 모드로 다시 시도]를 눌러 보세요.`;
+    $('simpleAR').style.display = ''; starting = false; $('startAR').disabled = false;
+  }, 10000);
+}
+addEventListener('error', e => log('오류: ' + e.message));
+addEventListener('unhandledrejection', e => log('오류: ' + (e.reason && e.reason.message || e.reason)));
 $('overlay').addEventListener('beforexrselect', e => e.preventDefault()); // 버튼 누름이 '찍기'로 처리되지 않게
 function arFail(e){
+  clearTimeout(watchdog); $('simpleAR').style.display = ''; log('실패: ' + (e && (e.name + ' ' + e.message) || e));
   const msg = `AR 시작 실패 (${arStep}): ${e && e.message || e}`;
   $('support').innerHTML = '⚠️ ' + msg + '<br>크롬을 완전히 닫았다가 다시 열고 시도해 보세요.';
   toast('AR 시작 실패');
@@ -434,25 +450,27 @@ async function startAR(){
   if (inViewer){ inViewer = false; labelMul = 1; rebuildRoom(); }
   let session = null;
   try {
-    arStep = '세션 요청';
-    const opts = { requiredFeatures:['hit-test'], optionalFeatures:['dom-overlay','plane-detection'], domOverlay:{ root:$('overlay') } };
+    step(simpleMode ? '세션 요청(간단 모드)' : '세션 요청');
+    const opts = simpleMode ? { requiredFeatures:['hit-test'] }
+      : { requiredFeatures:['hit-test'], optionalFeatures:['dom-overlay','plane-detection'], domOverlay:{ root:$('overlay') } };
     try { session = await navigator.xr.requestSession('immersive-ar', opts); }
     catch(e){
       if (e.name !== 'NotSupportedError') throw e;
-      arStep = '기본 세션 요청';
+      step('기본 세션 요청');
       session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures:['hit-test'] });
     }
     xrSession = session;
     session.addEventListener('end', onSessionEnd);
     session.addEventListener('select', placeHere);
     planeSupported = !!(session.enabledFeatures && session.enabledFeatures.includes('plane-detection'));
-    arStep = '렌더러 연결';
+    log('세션 열림: ' + JSON.stringify(session.enabledFeatures || []));
+    step('렌더러 연결');
     renderer.xr.setReferenceSpaceType('local');
     await renderer.xr.setSession(session);
     refSpace = renderer.xr.getReferenceSpace();
-    arStep = '시점 공간';
+    step('시점 공간');
     viewerSpace = await session.requestReferenceSpace('viewer');
-    arStep = '바닥 인식(hit-test)';
+    step('바닥 인식(hit-test)');
     hitSource = await session.requestHitTestSource({ space: viewerSpace });
   } catch(e){
     arFail(e);
@@ -460,7 +478,9 @@ async function startAR(){
     xrSession = null; starting = false; $('startAR').disabled = false; $('backAR').disabled = false;
     return;
   }
+  clearTimeout(watchdog); log('AR 시작 완료');
   starting = false; $('startAR').disabled = false; $('backAR').disabled = false;
+  if (simpleMode) setTimeout(() => toast('간단 모드: 화면을 탭하면 모서리가 찍혀요. 뒤로가기로 종료'), 500);
   $('intro').style.display = 'none'; $('viewer').classList.remove('show');
   $('overlay').classList.add('show'); gridHelper.visible = false;
   $('planes').disabled = !planeSupported; $('planes').classList.toggle('on', planeSupported && showPlanes);
@@ -473,6 +493,9 @@ function onSessionEnd(){
   reticle.visible = false; wallMarker.visible = false; previewLine.visible = false; previewLabel.visible = false;
   planeMeshes.forEach(m => planeGroup.remove(m)); planeMeshes.clear();
   $('overlay').classList.remove('show');
+  log('AR 세션 종료');
+  if (simpleMode && state.corners.length >= 3 && !state.closed){ state.closed = true; rebuildRoom(); }
+  if (simpleMode && state.corners.length) pendingViewer = true;
   if (pendingViewer) { pendingViewer = false; openViewer(); }
   else { renderer.setAnimationLoop(null); $('intro').style.display = 'flex'; }
 }
@@ -638,9 +661,11 @@ function loadDemo(){
   rebuildRoom(); openViewer();
 }
 
-$('startAR').addEventListener('click', () => { resetState(); setMode('corner'); startAR(); });
+$('startAR').addEventListener('click', () => { log('AR 시작 버튼 눌림'); simpleMode = false; resetState(); setMode('corner'); startAR(); });
+$('simpleAR').addEventListener('click', () => { log('간단 모드 버튼 눌림'); simpleMode = true; resetState(); setMode('corner'); startAR(); });
 $('demo').addEventListener('click', loadDemo);
 function resetState(){ Object.assign(state, { corners:[], closed:false, floorY:null, desks:[], windows:[], pending:null, history:[] }); rebuildRoom(); }
+log('페이지 로드 · ' + (navigator.userAgent.match(/Chrome\/[\d.]+/)||['?'])[0] + ' · 보안주소 ' + isSecureContext + ' · XR ' + !!navigator.xr);
 checkSupport(); updateStats();
 })();
 </script>
